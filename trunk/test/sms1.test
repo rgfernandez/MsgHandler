@@ -1,0 +1,22 @@
+<test>
+<contact>630000000000</contact>
+<headers>(dp1
+S'date'
+p2
+S'08-03-07 13:48:12'
+p3
+sS'from'
+p4
+S'630000000000'
+p5
+sS'subject'
+p6
+S'GSM1-Globe'
+p7
+s.</headers>
+<keyword></keyword>
+<date>03-07-2008 13:48:12</date>
+<text_content>Gud am. 
+</text_content>
+<attachments>(d.</attachments>
+</test>

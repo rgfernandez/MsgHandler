@@ -1,0 +1,17 @@
+#!/bin/sh
+
+# taken from martian.upm.edu.ph
+# code from Eric Pareja and Bowei Du
+
+# This is an example how to use an eventhandler with smsd.
+# $1 is the type of the event wich can be SENT, RECEIVED, FAILED or REPORT.
+# $2 is the filename of the sms.
+# $3 is the message id. Only used for SENT messages with status report.
+
+MHPATH=/path/to/MsgHandler/trunk
+
+if [ "$1" = "RECEIVED" ]; then
+    echo $2 >> $MHPATH/codes/mylog.txt
+#    chmod a+r $2 # changes the file attributes so that everybody can read SMS file
+    $MHPATH/python/SmsHandler.py -c $MHPATH/config/triage.conf $2
+fi

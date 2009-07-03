@@ -1,0 +1,12 @@
+old repository address is at https://202.92.128.162/keg/repos/triage/MsgHandler
+program use instructions is at trunk/doc/README.txt
+
+This code is developed by Randy Joseph Fernandez (UP Manila) as a component of
+the DOST Project ECCS.
+
+Acknowledgements for the codes extensively used in this project are due to:
+- Eric Pareja (UP Manila), SMS referral system for the BuddyWorks project
+- Bowei Du (UC Berkeley), SMS appointment reminder system for CHITS
+- Jerome Ortega (UP Diliman), Web Service interfacing for the Lifelink project
+
+and also to various individuals who posted their code on the Internet.

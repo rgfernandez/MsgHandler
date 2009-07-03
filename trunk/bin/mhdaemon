@@ -1,0 +1,7 @@
+#!/bin/sh
+
+MHPATH=/path/to/MsgHandler/trunk
+
+$MHPATH/python/EmailHandler.py -c $MHPATH/config/triage.conf $*
+$MHPATH/python/MH2Triage.py -c $MHPATH/config/triage.conf $*
+$MHPATH/python/Triage2MH.py -c $MHPATH/config/triage.conf $*

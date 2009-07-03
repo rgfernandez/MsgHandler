@@ -1,0 +1,7 @@
+#!/bin/sh
+
+MHPATH=/path/to/MsgHandler/trunk
+
+$MHPATH/python/test_smshandler.py
+$MHPATH/python/test_emailhandler.py
+$MHPATH/python/test_mhlink.py
