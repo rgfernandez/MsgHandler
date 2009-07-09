@@ -46,8 +46,11 @@ class SmsReader:
         """Insert received sms into database and send an autoreply."""
         msg = self.get_message(smsfile)
         outp = self._parse(msg)
-        self.insert_msg_to_db(outp)
-        self.respond_to_msg(*outp)
+        self._process(outp)
+        #print outp
+        #return
+        #self.insert_msg_to_db(outp)
+        #self.respond_to_msg(*outp)
     
     def _parse(self, msg):
         """Parse sms messages and return as tuple."""
@@ -55,9 +58,12 @@ class SmsReader:
         contact = self.get_contact(headers)
         text_content = self.get_text_content(msg.get_payload())
         attachments = self.get_attachments(msg.get_payload())
-        headers['keyword'] = self.get_keyword(text_content)
+        headers['path'], headers['keyword'] = self.get_keyword(text_content)
         
         return (contact, headers, text_content, attachments)
+    
+    def _process(self, msg):
+        print msg
     
     def get_headers(self, msg):
         """Add special headers to existing sms headers."""
@@ -95,16 +101,15 @@ class SmsReader:
     
     def get_keyword(self, text_content):
         """Return keyword."""
-        keys = self.cfg.get('buddyworks', 'keywords')
-        keys = keys.split(',')
-        vals = self.cfg.items('keywords')
-        for (item, elem) in vals:
-            if item not in keys:
-                continue
-            rex = re.compile(elem)
-            if rex.match(text_content.lower()):
-                return item
-        return ''
+        for handler in self.cfg.get('handlers', 'enabled').split(','):
+            keys = self.cfg.get(handler, 'keywords').split(',')
+            for (item, elem) in self.cfg.items('keywords'):
+                if item not in keys:
+                    continue
+                rex = re.compile(elem)
+                if rex.match(text_content.lower()):
+                    return (self.cfg.get(handler, 'path'), item)
+        return ('', '')
     
     def get_date(self, headers, date_fmt="%m-%d-%Y %H:%M:%S"):
         """Return formatted date as string."""
@@ -204,6 +209,7 @@ def main():
     config_file = '-'
     test_match = False
     
+    print opts, args
     for o, a in opts:
         if o in ('-h', '--help'):
             print help()
@@ -222,7 +228,7 @@ def main():
     smsfile = args[0]
     if not os.path.exists(smsfile):
         raise Exception("Can't find smsfile %s" % smsfile)
-    
+    print config_file, smsfile
     x = SmsReader(config_file, smsfile)
     x.run()
 
