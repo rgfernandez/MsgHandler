@@ -46,12 +46,10 @@ def main():
     cur = conn.cursor()
     
     x = []
-    y = []
     for elem,item in enumerate(data):
-        x.append(elem)
-        y.append(item)
+        x.append("[%s,%s]" % (elem, item))
     
-    cur.execute("""INSERT INTO edfs (val) VALUES ('[ [ [%s] [%s] ] ]')""" % (', '.join([str(elem) for elem in x]), ', '.join([str(elem) for elem in y])))
+    cur.execute("""INSERT INTO edfs (val) VALUES ('[[%s]]')""" % (','.join(x)))
     conn.close()
 
 if __name__ == '__main__':
