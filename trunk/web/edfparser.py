@@ -1,5 +1,6 @@
 #!/usr/bin/python
 
+import getopt, sys, os
 import ConfigParser
 import MySQLdb
 import edf
@@ -25,25 +26,25 @@ def main():
     if not os.path.exists(config_file) or not os.path.exists(ecg_file):
         raise
     
-    try:
-        db_params = {'host': self.cfg.get('database', 'host'),
-                    'port': self.cfg.get('database', 'port'),
-                    'username': self.cfg.get('database', 'username'),
-                    'passwd': self.cfg.get('database', 'passwd'),
-                    'db': self.cfg.get('database', 'db')}
-    except ConfigParser.NoSectionError, e:
-        raise ConfigError(str(e))
-    except ConfigParser.NoOptionError, e:
-        raise ConfigError(str(e))
-    
     cfg = ConfigParser.ConfigParser()
     cfg.read(config_file)
+    
+    try:
+        db_params = {'host': cfg.get('database', 'host'),
+                    'port': int(cfg.get('database', 'port')),
+                    'user': cfg.get('database', 'user'),
+                    'passwd': cfg.get('database', 'passwd'),
+                    'db': cfg.get('database', 'db')}
+    except ConfigParser.NoSectionError, e:
+        raise
+    except ConfigParser.NoOptionError, e:
+        raise
     
     x = edf.EDFSignal(ecg_file,'ecg.txt','II',15,50).extract_ECG()
     
     conn = MySQLdb.connect(**db_params)
     cur = conn.cursor()
-    cur.execute("""INSERT INTO edfs (val) VALUES ('%s')""" % (','.join([str(elem) for elem in data])))
+    cur.execute("""INSERT INTO edfs (val) VALUES ('%s')""" % (','.join([str(elem) for elem in x])))
     conn.close()
 
 if __name__ == '__main__':
