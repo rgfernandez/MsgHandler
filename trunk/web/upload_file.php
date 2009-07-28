@@ -22,12 +22,13 @@ else {
         echo $target_path;
         mkdir($target_path);
     } 
-//    $target_path = $target_path . basename( $FUP['name']); 
-    $target_path = $target_path . "latest.jpg";
+    $target_path = $target_path . basename( $FUP['name']); 
+//    $target_path = $target_path . "latest.jpg";
     
     // Do overwrite check before this
     if(move_uploaded_file($FUP['tmp_name'], $target_path)) {
         echo 0;
+        exec("python edfparser.py -c config.conf" . $target_path);
     } else {
         echo -2;
     }
