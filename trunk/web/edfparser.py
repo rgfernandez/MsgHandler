@@ -40,11 +40,18 @@ def main():
     except ConfigParser.NoOptionError, e:
         raise
     
-    x = edf.EDFSignal(ecg_file,'ecg.txt','II',15,50).extract_ECG()
+    data = edf.EDFSignal(ecg_file,'ecg.txt','II',15,50).extract_ECG()
     
     conn = MySQLdb.connect(**db_params)
     cur = conn.cursor()
-    cur.execute("""INSERT INTO edfs (val) VALUES ('%s')""" % (','.join([str(elem) for elem in x])))
+    
+    x = []
+    y = []
+    for elem,item in enumerate(data):
+        x.append(elem)
+        y.append(item)
+    
+    cur.execute("""INSERT INTO edfs (val) VALUES ('[ [ [%s] [%s] ] ]')""" % (', '.join([str(elem) for elem in x]), ', '.join([str(elem) for elem in y])))
     conn.close()
 
 if __name__ == '__main__':
