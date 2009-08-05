@@ -29,9 +29,9 @@ def stopd(module='', pidfile=''):
     # disclaimer: taken from the internet (will search for the link)
     pidfile = os.path.basename(pidfile)
     if module == 'main':
-        pidfile = os.path.join(PATH_MAIN, 'main', 'log', pidfile)
+        pidfile = os.path.join(PATH_ROOT, 'main', 'log', pidfile)
     else:
-        pidfile = os.path.join(PATH_MAIN, 'modules', module, 'log', pidfile)
+        pidfile = os.path.join(PATH_ROOT, 'modules', module, 'log', pidfile)
     if not os.path.exists(pidfile):
         raise ConfigError("%s not found" % pidfile)
     pf = file(pidfile, 'r')
@@ -93,9 +93,9 @@ def startd(module='', pidfile=''):
     pid = os.getpid()
     pidfile = os.path.basename(pidfile)
     if module == 'main':
-        pidfile = os.path.join(PATH_MAIN, 'main', 'log', pidfile)
+        pidfile = os.path.join(PATH_ROOT, 'main', 'log', pidfile)
     else:
-        pidfile = os.path.join(PATH_MAIN, 'modules', module, 'log', pidfile)
+        pidfile = os.path.join(PATH_ROOT, 'modules', module, 'log', pidfile)
     if not os.path.exists(pidfile):
         raise ConfigError("%s not found" % pidfile)
     pf = file(pidfile,'r+')
@@ -198,9 +198,9 @@ class XmlWrapper:
 
 if __name__ == '__main__':
     print 'This script is not meant to be run from command line'
-    PATH_MAIN = project_path(sys.argv[0])
+    PATH_ROOT = project_path(sys.argv[0])
 else:
-    PATH_MAIN = project_path(__file__)
+    PATH_ROOT = project_path(__file__)
     
     FORMAT = "%(asctime)-15s:%(levelname)-3s:%(name)-8s %(message)s"
     logging.basicConfig(level=logging.DEBUG, format=FORMAT)
