@@ -344,7 +344,7 @@ def main():
     pidfile = 'email.pid'
     action = args[0]
     if not cmp(action, 'stop') or not cmp(action, 'restart'):
-        for elem in stopd(pidfile):
+        for elem in stopd('main', pidfile):
             log.error(elem)
         if not cmp(action, 'restart'):
             action = 'start'
