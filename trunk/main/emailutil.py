@@ -1,5 +1,6 @@
 #!/usr/bin/python
 
+import logging
 import getopt
 import sys
 import os
@@ -8,8 +9,8 @@ import tempfile
 import ConfigParser
 
 from mhtools import stopd, startd
-from mhtools import get_logger
 from mhtools import ConfigError
+from mhtools import project_path
 
 import re
 import datetime
@@ -21,6 +22,8 @@ from email.MIMEMultipart import MIMEMultipart
 from email.MIMEBase import MIMEBase
 from email.MIMEText import MIMEText
 from email import Encoders
+
+log = logging.getLogger('emailutil')
 
 class EmailReader:
     def __init__(self, config_file):
@@ -36,6 +39,7 @@ class EmailReader:
             
             if not self.cfg.has_section('headers'):
                 raise ConfigParser.NoSectionError
+            log.debug('Using %s' % (str(self.email_params)))
         except ConfigParser.NoSectionError, e:
             raise ConfigError(str(e))
         except ConfigParser.NoOptionError, e:
@@ -70,53 +74,45 @@ class EmailReader:
             log.info("%d message(s) unread" % len(resp))
         return resp
     
-    def get_message(self, msgnum):
-        """Get email, set as seen, and return as email object."""
-        msg = self.serv.fetch(msgnum, "RFC822")
-        if msg[0]!='OK':
-            return ''
-        self.serv.store(msgnum, '+FLAGS', '\\Seen')
-        return email.message_from_string(msg[1][0][1])
+    def get_message(self, msgtext):
+        """Get email from file and return as email object."""
+        return email.message_from_string(msgtext)
     
-    def test_mode(self):
-        """Send all received email back to sender. Use 'reply' as email body."""
-        log.debug('Using %s' % (str(self.email_params)))
-        try:
-            test1 = self.cfg.get('email', 'test1')
-            test2 = self.cfg.get('email', 'test2')
-        except ConfigParser.NoOptionError, e:
-            raise ConfigError(str(e))
-        
-        self.login()
-        while True:
-            for i in self.get_unread():
-                msg = self.get_message(i)
-                if not msg:
-                    continue
-                outp = self._parse(msg)
-                
-                (contact, headers, text_content, attachments) = outp
-                if not headers['caseid']:
-                    headers['caseid'] = '100'
-                    headers['uploadurl'] = 'http://parakeeto.ath.cx:60080/web/upload_file.php'
-                contact = test1 if (contact==test2) else test2
-                self.respond_to_msg(contact, headers, text_content, attachments)
-            time.sleep(self.sleep)
-        self.logout()
-    
-    def run(self):
+    def poll_email(self, test_mode=False):
         """Check email from time to time. Insert into database and send an autoreply."""
-        log.debug('Using %s' % (str(self.email_params)))
-        
         self.login()
         while True:
             for i in self.get_unread():
-                msg = self.get_message(i)
-                outp = self._parse(msg)
-                self.insert_msg_to_db(outp)
-                self.respond_to_msg(*outp)
+                msg = self.serv.fetch(i, "RFC822")
+                if msg[0]=='OK':
+                    self.serv.store(msgnum, '+FLAGS', '\\Seen')
+                    self.run(msg[1][0][1], test_mode)
             time.sleep(self.sleep)
         self.logout()
+    
+    def run(self, emailtext='', test_mode=False):
+        """If test mode, forward message. Else, call appropriate module."""
+        msg = self.get_message(emailtext)
+        outp = self._parse(msg)
+        log.info(outp)
+        if test_mode:
+            # send reply to test number
+            (contact, headers, text_content, attachments) = outp
+            
+            try:
+                test1 = self.cfg.get('email', 'test1')
+                test2 = self.cfg.get('email', 'test2')
+                upload_url = self.cfg.get('email', 'testurl')
+            except ConfigParser.NoOptionError, e:
+                raise ConfigError(str(e))
+            
+            if not headers['caseid']:
+                headers['caseid'] = '100'
+                headers['uploadurl'] = upload_url
+            contact = test1 if (contact==test2) else test2
+            self.respond_to_msg(contact, headers, text_content, attachments)
+        else:
+            self._process(*outp)
     
     def _parse(self, msg):
         """Parse email messages and return as tuple."""
@@ -127,11 +123,21 @@ class EmailReader:
         
         return (contact, headers, text_content, attachments)
     
+    def _process(self, contact, headers, text_content, attachments):
+        print headers
+        MODULE_PATH = os.path.join(project_path(),'modules',headers['path'])
+        sys.path.append(MODULE_PATH)
+        try:
+            import main
+            main.process(contact=contact, headers=headers, text_content=text_content, attachments=attachments)
+        except ImportError:
+            raise Exception("%s does not exist" % MODULE_PATH)
+    
     def get_headers(self, msg):
         """Add special headers to existing email headers."""
         headers = self.get_headers_orig(msg)
         headers = self.get_headers_spl(msg)
-        headers['keyword'] = self.get_keyword(headers)
+        headers['path'], headers['keyword'] = self.get_keyword(headers)
         headers['caseid'] = self.get_caseid(headers)
         headers['subject'] = self.get_subject(headers)
         headers['references'] = self.get_references(headers)
@@ -205,9 +211,19 @@ class EmailReader:
     def get_keyword(self, headers):
         """Return keyword."""
         if 'caseid' in headers:
-            return 'followup'
+            keyphrase = 'followup'
         else:
-            return 'refer'
+            keyphrase = headers['subject']
+        
+        for handler in self.cfg.get('handlers', 'enabled').split(','):
+            keys = self.cfg.get(handler, 'keywords').split(',')
+            for (item, elem) in self.cfg.items('keywords'):
+                if item not in keys:
+                    continue
+                rex = re.compile(elem)
+                if rex.match(keyphrase.strip().lower()):
+                    return (self.cfg.get(handler, 'path'), item)
+        return ('', '')
     
     def get_date(self, headers, date_fmt="%m-%d-%Y %H:%M:%S"):
         """Return formatted date as string."""
@@ -246,13 +262,6 @@ class EmailReader:
         if email_send.send_message(contact, headers, text_content, attachments):
             log.info('sent to %s' % contact)
     
-    def insert_msg_to_db(self, outp):
-        """Insert received email into database."""
-        cfg = dict(self.cfg.items('database'))
-        db = DbLink(**cfg)
-        uuid = db.insert_msg(*outp)
-        db.close()
-
 class EmailSender:
     def __init__(self, config):
         self.cfg = config
@@ -307,28 +316,33 @@ class EmailSender:
 
 def main():
     """Handle command line arguments."""
-    opts, args = getopt.getopt(sys.argv[1:], 'hdtc:', ['help', 'debug', 'config-file=', 'test'])
-    
-    action = args[0]
-    #debug_level = logging.INFO
+    debug_level = logging.INFO
     config_file = '-'
+    test_file = ''
     test_mode = False
+    FORMAT = "%(asctime)-15s:%(levelname)-3s:%(name)-8s %(message)s"
+    
+    logging.basicConfig(level=debug_level, format = FORMAT)
+    opts, args = getopt.getopt(sys.argv[1:], 'hdtf:c:', ['help', 'debug', 'config-file=', 'test', 'file='])
     
     for o, a in opts:
         if o in ('-h', '--help'):
             print 'hello'
             sys.exit(0)
         elif o in ('-d', '--debug'):
-            pass#debug_level = logging.DEBUG
+            debug_level = logging.DEBUG
         elif o in ('-c', '--config-file'):
             config_file = a
         elif o in ('-t', '--test'):
             test_mode = True
+        elif o in ('-f', '--file'):
+            test_file = a
     
     if not os.path.exists(config_file):
         raise ConfigError("%s not found" % config_file)
     
     pidfile = 'email.pid'
+    action = args[0]
     if not cmp(action, 'stop') or not cmp(action, 'restart'):
         for elem in stopd(pidfile):
             log.error(elem)
@@ -336,19 +350,18 @@ def main():
             action = 'start'
     if not cmp(action, 'start'):
         x = EmailReader(config_file)
-        log.info("Daemon PID %d" % startd(pidfile))
-        if test_mode:
-            x.test_mode()
+        log.info("Daemon PID %d" % startd('main', pidfile))
+        #return
+        if test_file:
+            x.run(open(test_file, 'r').read(), test_mode)
         else:
-            x.run()
+            x.poll_email(test_mode)
 
 if __name__ == '__main__':
-    smsfile = '-'
-    log = get_logger("emailhandler")
     try:
         main()
     except Exception, e:
-        log.error('Exception processing "%s": %s' % (smsfile, e))
+        log.error('%s' % (e,))
         raise
 else:
-    log = get_logger("emailhandler")
+    pass

@@ -1,5 +1,4 @@
 import logging
-import logging.config
 
 import sys
 import os
@@ -9,32 +8,28 @@ import time
 
 import xml.dom.minidom as minidom
 
+log = logging.getLogger('mhtools')
+
 #---------- os.path tools
 def project_path(cur_path=''):
     """Return path to trunk."""
     if not cur_path:
         cur_path = __file__
     real_path = os.path.realpath(cur_path)
-    # path of upper-level directory
-    upper_folder = os.path.split(real_path)[0]
-    # path of topmost-level directory (trunk)
-    return os.path.split(upper_folder)[0]
-
-#---------- logging tools
-def get_logger(logger_name):
-    """Return object for logging."""
-    logger_path = os.path.join(PATH, 'config', "logging.conf")
-    if os.path.exists(logger_path):
-        logging.config.fileConfig(logger_path)
-        logging.info("%s started" % logger_name)
-    return logging.getLogger(logger_name)
+    # path of main directory
+    main_path = os.path.split(real_path)[0]
+    # path of upper directory
+    return os.path.split(main_path)[0]
 
 #---------- daemon tools
 def stopd(pidfile=''):
     """Kill processes written on pid files."""
     # disclaimer: taken from the internet (will search for the link)
     pidfile = os.path.basename(pidfile)
-    pidfile = os.path.join(PATH, 'log', pidfile)
+    if module == 'main':
+        pidfile = os.path.join(PATH_MAIN, 'main', 'log', pidfile)
+    else:
+        pidfile = os.path.join(PATH_MAIN, 'modules', module, 'log', pidfile)
     if not os.path.exists(pidfile):
         raise ConfigError("%s not found" % pidfile)
     pf = file(pidfile, 'r')
@@ -61,15 +56,16 @@ def stopd(pidfile=''):
     pf = file(pidfile, 'w')
     pf.write('\n'.join(pids)+'\n')
     pf.close()
+    log.info('modified %s' % pidfile)
     return errors
 
-def startd(pidfile=''):
+def startd(module='', pidfile=''):
     """Daemonize process and write pid into file."""
     # do the UNIX double-fork magic, see Stevens' "Advanced 
     # Programming in the UNIX Environment" for details (ISBN 0201563177)
     # http://code.activestate.com/recipes/66012/
     # CHITS SMS code from Bowei Du
-    try:
+    """try:
         pid = os.fork()
         if pid > 0:
             log.info("Daemon PID %d" % pid)
@@ -91,16 +87,20 @@ def startd(pidfile=''):
     except OSError, e:
         log.error("fork #2 failed: %d (%s)" % (e.errno, e.strerror))
         sys.exit(1)
-    
+    """
     pid = os.getpid()
     pidfile = os.path.basename(pidfile)
-    pidfile = os.path.join(PATH, 'log', pidfile)
+    if module == 'main':
+        pidfile = os.path.join(PATH_MAIN, 'main', 'log', pidfile)
+    else:
+        pidfile = os.path.join(PATH_MAIN, 'modules', module, 'log', pidfile)
     if not os.path.exists(pidfile):
         raise ConfigError("%s not found" % pidfile)
-    pf = file(pidfile,'r+')
+    """pf = file(pidfile,'r+')
     pf.write("%s\n" % pid)
     pf.close()
-    
+    """
+    log.info('modified %s' % pidfile)
     return pid
 
 #---------- Exception tools
@@ -196,8 +196,9 @@ class XmlWrapper:
 
 if __name__ == '__main__':
     print 'This script is not meant to be run from command line'
-    PATH = project_path(sys.argv[0])
-    log = get_logger("mhtools")
+    PATH_MAIN = project_path(sys.argv[0])
 else:
-    PATH = project_path(__file__)
-    log = get_logger("mhtools")
+    PATH_MAIN = project_path(__file__)
+    
+    FORMAT = "%(asctime)-15s:%(levelname)-3s:%(name)-8s %(message)s"
+    logging.basicConfig(level=logging.DEBUG, format=FORMAT)

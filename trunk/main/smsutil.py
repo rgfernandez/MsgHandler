@@ -1,5 +1,6 @@
 #!/usr/bin/python
 
+import logging
 import getopt
 import sys
 import os
@@ -11,8 +12,10 @@ import re
 import datetime
 import email
 
-from mhtools import get_logger
 from mhtools import ConfigError
+from mhtools import project_path
+
+log = logging.getLogger('smsutil')
 
 class SmsReader:
     def __init__(self, config):
@@ -29,21 +32,21 @@ class SmsReader:
         except ConfigParser.NoOptionError, e:
             raise ConfigError(str(e))
     
-    def get_message(self, smstext):
+    def get_message(self, msgtext):
         """Get sms from file and return as email object."""
-        return email.message_from_string(smstext)
+        return email.message_from_string(msgtext)
     
-    def test_mode(self, smstext=''):
-        """Send all received sms back to sender. Use 'reply' as sms body."""
+    def run(self, smstext='', test_mode=False):
+        """If test mode, forward message. Else, call appropriate module."""
         msg = self.get_message(smstext)
         outp = self._parse(msg)
-        self.respond_test(*outp)
-    
-    def run(self, smstext=''):
-        """Insert received sms into database and send an autoreply."""
-        msg = self.get_message(smstext)
-        outp = self._parse(msg)
-        self._process(*outp)
+        log.info(outp)
+        if test_mode:
+            # send reply to test number
+            (contact, headers, text_content, attachments) = outp
+            self.respond_to_msg(self.cfg.get('sms', 'test'), headers, text_content, attachments)
+        else:
+            self._process(*outp)
     
     def _parse(self, msg):
         """Parse sms messages and return as tuple."""
@@ -56,12 +59,13 @@ class SmsReader:
         return (contact, headers, text_content, attachments)
     
     def _process(self, contact, headers, text_content, attachments):
-        sys.path.append(headers['path'])
+        MODULE_PATH = os.path.join(project_path(),'modules',headers['path'])
+        sys.path.append(MODULE_PATH)
         try:
             import main
             main.process(contact=contact, headers=headers, text_content=text_content, attachments=attachments)
         except ImportError:
-            print (contact, headers, text_content, attachments)
+            raise Exception("%s does not exist" % MODULE_PATH)
     
     def get_headers(self, msg):
         """Add special headers to existing sms headers."""
@@ -105,7 +109,7 @@ class SmsReader:
                 if item not in keys:
                     continue
                 rex = re.compile(elem)
-                if rex.match(text_content.lower()):
+                if rex.match(text_content.strip().lower()):
                     return (self.cfg.get(handler, 'path'), item)
         return ('', '')
     
@@ -128,6 +132,13 @@ class SmsReader:
     def get_attachments(self, content):
         """Return sms attachments as dictionary."""
         return dict()
+    
+    def respond_to_msg(self, contact, headers, text_content, attachments):
+        """Send sms response using SmsSender class."""
+        sms_send = SmsSender(self.cfg)
+        headers['subject'] = '[caseid-%s] Re: %s' % (headers['caseid'], headers['subject'])
+        if sms_send.send_message(contact, headers, text_content, attachments):
+            log.info('sent to %s' % contact)
     
 class SmsSender:
     # BuddyWorks code from Eric Pareja and Bowei Du
@@ -176,24 +187,24 @@ def help():
 def main():
     """Handle command line arguments."""
     # CHITS SMS code from Bowei Du
+    debug_level = logging.INFO
+    config_file = '-'
+    test_mode = False
+    FORMAT = "%(asctime)-15s:%(levelname)-3s:%(name)-8s %(message)s"
+    
+    logging.basicConfig(level=debug_level, format = FORMAT)
     opts, args = getopt.getopt(sys.argv[1:], 'hdtc:', ['help', 'debug', 'config-file=', 'test'])
     
-    #debug_level = logging.INFO
-    config_file = '-'
-    test_match = False
-    
-    print opts, args
     for o, a in opts:
         if o in ('-h', '--help'):
             print help()
             sys.exit(0)
         elif o in ('-d', '--debug'):
-            #debug_level = logging.DEBUG
-            pass
+            debug_level = logging.DEBUG
         elif o in ('-c', '--config-file'):
             config_file = a
         elif o in ('-t', '--test'):
-            test_match = True
+            test_mode = True
     
     if not os.path.exists(config_file):
         raise ConfigError("%s not found" % config_file)
@@ -206,15 +217,13 @@ def main():
     smstext = open(smsfile, 'r').read()
     
     x = SmsReader(cfg)
-    x.run(smstext)
+    x.run(smstext, test_mode)
 
 if __name__ == '__main__':
-    smsfile = '-'
-    log = get_logger("smshandler")
     try:
         main()
     except Exception, e:
-        log.error('Exception processing "%s": %s' % (smsfile, e))
+        log.error('%s' % (e,))
         raise
 else:
-    log = get_logger("smshandler")
+    pass
