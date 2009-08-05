@@ -1,0 +1,50 @@
+Using the program*:
+1) initialization
+    cd MHPATH/bin (where init_sc is located)
+    chmod 755 init_sc
+    ./init_sc
+
+2) add configuration
+    vim MHPATH/main/config/main.conf (then modify values)
+
+3) run, stop
+    MHPATH/bin/mhdaemon <start/stop/restart>
+
+* note - MHPATH is the path to the root directory where the application is located (higher level than bin, doc, main, modules, etc)
+
+###
+Rules for adding modules:
+1) Module directory structure, for uniformity:
+   <module name>
+       |-----> python (scripts/codes)
+       |-----> config (configuration files)
+       |-----> log (log files)
+       |-----> test (test modules)
+
+2) A 'main.py' file should be located inside the 'python' folder. The file should contain a 'process' method that should accept the following parameters:
+   (a) contact - string
+   (b) headers - dictionary
+   (c) text_content - string
+   (d) attachment - dictionary
+
+3) Add module name in "handlers" section, "enabled" option in the main config file.
+
+4) Add a new section in the config file, same as below:
+	[module_name]
+	path: /path/to/module/trunk/python
+	keywords: key1,key2,key3
+
+5) Add desired keyword in the "keyword" section
+
+###
+Known Issues:
+1) MsgHandler script runs only on a Unix environment
+
+2) To update WSDL (web service connection error)
+    cd <path to>/MsgHandler/trunk/python
+    wsdl2py --complexType <url_address or file_path>
+
+3) Solution to the "/usr/bin/python^M: bad interpreter: No such file or directory" problem...
+    vim -b <filename>
+    :1,$s/^M//g
+    :wq
