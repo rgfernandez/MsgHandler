@@ -22,7 +22,7 @@ def project_path(cur_path=''):
     return os.path.split(main_path)[0]
 
 #---------- daemon tools
-def stopd(pidfile=''):
+def stopd(module='', pidfile=''):
     """Kill processes written on pid files."""
     # disclaimer: taken from the internet (will search for the link)
     pidfile = os.path.basename(pidfile)
@@ -65,7 +65,7 @@ def startd(module='', pidfile=''):
     # Programming in the UNIX Environment" for details (ISBN 0201563177)
     # http://code.activestate.com/recipes/66012/
     # CHITS SMS code from Bowei Du
-    """try:
+    try:
         pid = os.fork()
         if pid > 0:
             log.info("Daemon PID %d" % pid)
@@ -87,7 +87,7 @@ def startd(module='', pidfile=''):
     except OSError, e:
         log.error("fork #2 failed: %d (%s)" % (e.errno, e.strerror))
         sys.exit(1)
-    """
+    
     pid = os.getpid()
     pidfile = os.path.basename(pidfile)
     if module == 'main':
@@ -96,10 +96,10 @@ def startd(module='', pidfile=''):
         pidfile = os.path.join(PATH_MAIN, 'modules', module, 'log', pidfile)
     if not os.path.exists(pidfile):
         raise ConfigError("%s not found" % pidfile)
-    """pf = file(pidfile,'r+')
+    pf = file(pidfile,'r+')
     pf.write("%s\n" % pid)
     pf.close()
-    """
+    
     log.info('modified %s' % pidfile)
     return pid
 
