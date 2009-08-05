@@ -1,0 +1,19 @@
+#!/bin/sh
+
+CPATH=`pwd`
+IPATH=`echo $0 | sed "s:^.::"`
+MHPATH=`echo $CPATH$IPATH | sed "s:/bin/init_sc$::"`
+
+# substitute path locations
+sed -i -e "s:\(MHPATH=\).*:\1$MHPATH:" $MHPATH/bin/mhdaemon
+sed -i -e "s:\(MHPATH=\).*:\1$MHPATH:" $MHPATH/bin/mh-unittest
+sed -i -e "s:\(MHPATH=\).*:\1$MHPATH:" $MHPATH/bin/smsevent
+
+# set permissions
+chmod 755 $MHPATH/bin/mhdaemon
+chmod 755 $MHPATH/bin/mh-unittest
+chmod 755 $MHPATH/bin/smsevent
+
+find $MHPATH -type d | grep ^log$ | xargs chmod -R 666
+find $MHPATH/main -type f | grep ^test_.*py$ | xargs chmod 755
+find $MHPATH/modules -type f | grep ^test_.*py$ | xargs chmod 755
