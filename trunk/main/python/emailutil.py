@@ -125,7 +125,7 @@ class EmailReader:
     
     def _process(self, contact, headers, text_content, attachments):
         print headers
-        MODULE_PATH = os.path.join(project_path(),'modules',headers['path'])
+        MODULE_PATH = os.path.join(project_path(),'modules',headers['path'],'python')
         sys.path.append(MODULE_PATH)
         try:
             import main

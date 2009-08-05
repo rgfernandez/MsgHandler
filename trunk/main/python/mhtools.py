@@ -16,9 +16,11 @@ def project_path(cur_path=''):
     if not cur_path:
         cur_path = __file__
     real_path = os.path.realpath(cur_path)
-    # path of main directory
-    main_path = os.path.split(real_path)[0]
-    # path of upper directory
+    # path of code directory
+    code_path = os.path.split(real_path)[0]
+    # path of main application directory
+    main_path = os.path.split(code_path)[0]
+    # path of root directory
     return os.path.split(main_path)[0]
 
 #---------- daemon tools

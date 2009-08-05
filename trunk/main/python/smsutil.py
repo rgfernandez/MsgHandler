@@ -59,7 +59,7 @@ class SmsReader:
         return (contact, headers, text_content, attachments)
     
     def _process(self, contact, headers, text_content, attachments):
-        MODULE_PATH = os.path.join(project_path(),'modules',headers['path'])
+        MODULE_PATH = os.path.join(project_path(),'modules',headers['path'],'python')
         sys.path.append(MODULE_PATH)
         try:
             import main
