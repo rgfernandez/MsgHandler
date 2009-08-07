@@ -51,6 +51,6 @@ class Main:
         
         sms_send = Sender(self.cfg)
         headers['subject'] = '[caseid-%s] Re: %s' % (headers['caseid'], headers['subject'])
-        return
+        
         if sms_send.send_message(contact, headers, text_content, attachments):
             log.info('sent to %s' % contact)
