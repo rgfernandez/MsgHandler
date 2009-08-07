@@ -3,10 +3,10 @@
 MHPATH=/path/to/MsgHandler/trunk
 
 # main folder
-python $MHPATH/main/python/EmailHandler.py -c $MHPATH/main/config/triage.conf $*
+python $MHPATH/main/python/emailutil.py -c $MHPATH/main/config/triage.conf $*
 
 # modules folder
 
 # (old) python folder
-python $MHPATH/python/MH2Triage.py -c $MHPATH/config/triage.conf $*
-python $MHPATH/python/Triage2MH.py -c $MHPATH/config/triage.conf $*
+#python $MHPATH/python/MH2Triage.py -c $MHPATH/config/triage.conf $*
+#python $MHPATH/python/Triage2MH.py -c $MHPATH/config/triage.conf $*
