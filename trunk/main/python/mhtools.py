@@ -18,6 +18,14 @@ def project_path(cur_path=''):
     # path of root directory
     return os.path.split(main_path)[0]
 
+def add_module(mod_name=''):
+    """Return path to module."""
+    if not mod_name:
+        return False
+    MODULE_PATH = os.path.join(project_path(),'modules',mod_name,'python')
+    sys.path.append(MODULE_PATH)
+    return True
+
 #---------- Exception tools
 class ConfigError(Exception):
     """Exception handling for configuration file."""

@@ -13,7 +13,7 @@ import datetime
 import email
 
 from mhtools import ConfigError
-from mhtools import project_path
+from mhtools import add_module
 
 log = logging.getLogger('smsutil')
 
@@ -58,14 +58,13 @@ class SmsReader:
         return (contact, headers, text_content, attachments)
     
     def _process(self, mod_name, outp, test_mode=False):
-        MODULE_PATH = os.path.join(project_path(),'modules',mod_name,'python')
-        sys.path.append(MODULE_PATH)
+        add_module(mod_name)
         try:
             from main import Main
             x = Main(self.cfg, test_mode)
             x.process(*outp)
         except ImportError:
-            raise Exception("%s (%s) does not exist" % (MODULE_PATH, mod_name))
+            raise Exception("module '%s' does not exist" % mod_name)
     
     def get_headers(self, msg):
         """Add special headers to existing sms headers."""
