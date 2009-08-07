@@ -4,16 +4,24 @@ CPATH=`pwd`
 IPATH=`echo $0 | sed "s:^.::"`
 MHPATH=`echo $CPATH$IPATH | sed "s:/bin/init_sc$::"`
 
+echo MsgHandler path set to $MHPATH
+
 # substitute path locations
 sed -i -e "s:\(MHPATH=\).*:\1$MHPATH:" $MHPATH/bin/mhdaemon
 sed -i -e "s:\(MHPATH=\).*:\1$MHPATH:" $MHPATH/bin/mh-unittest
 sed -i -e "s:\(MHPATH=\).*:\1$MHPATH:" $MHPATH/bin/smsevent
+
+echo MsgHandler path written to files in \'bin\' directory
 
 # set permissions
 chmod 770 $MHPATH/bin/mhdaemon
 chmod 770 $MHPATH/bin/mh-unittest
 chmod 770 $MHPATH/bin/smsevent
 
+echo Permissions modified to files in \'bin\' directory
+
 find $MHPATH -type d -name "log" -exec chmod -R 770 {} \;
 find $MHPATH/main -type f -name "test*py" -exec chmod 770 {} \;
 find $MHPATH/modules -type f -name "test*py" -exec chmod 770 {} \;
+
+echo Permissions modified for log and unittest files
