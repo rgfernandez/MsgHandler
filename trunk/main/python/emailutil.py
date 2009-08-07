@@ -8,7 +8,7 @@ import time
 import tempfile
 import ConfigParser
 
-from mhtools import stopd, startd
+from daemon import stopd, startd
 from mhtools import ConfigError
 from mhtools import project_path
 
