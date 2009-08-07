@@ -5,3 +5,12 @@ MHPATH=/path/to/MsgHandler/trunk
 $MHPATH/python/test_smshandler.py
 $MHPATH/python/test_emailhandler.py
 $MHPATH/python/test_mhlink.py
+
+echo running unit tests...
+for t in `find $MHPATH/test -name \*.test`; do
+	echo TEST: $t
+	python $MHPATH/python/testutil.py $* $t
+	if [ $? -eq 0 ]; then
+        echo PASSED
+    fi
+done
