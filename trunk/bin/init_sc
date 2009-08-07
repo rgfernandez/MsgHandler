@@ -14,6 +14,6 @@ chmod 755 $MHPATH/bin/mhdaemon
 chmod 755 $MHPATH/bin/mh-unittest
 chmod 755 $MHPATH/bin/smsevent
 
-find $MHPATH -type d -name "log" | xargs chmod -R 666
-find $MHPATH/main -type f -name "test*py" | xargs chmod 755
-find $MHPATH/modules -type f -name "test*py" | xargs chmod 755
+find $MHPATH -type d -name "log" | xargs chmod -R 770
+find $MHPATH/main -type f -name "test*py" | xargs chmod 770
+find $MHPATH/modules -type f -name "test*py" | xargs chmod 770
