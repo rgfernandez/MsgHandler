@@ -11,7 +11,6 @@
 MHPATH=/path/to/MsgHandler/trunk
 
 if [ "$1" = "RECEIVED" ]; then
-    echo $2 >> $MHPATH/codes/mylog.txt
 #    chmod a+r $2 # changes the file attributes so that everybody can read SMS file
-    $MHPATH/python/SmsHandler.py -c $MHPATH/config/triage.conf $2
+    python $MHPATH/main/python/smsutil.py -c $MHPATH/main/config/main.conf $2
 fi
