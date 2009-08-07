@@ -65,7 +65,7 @@ class SmsReader:
             x = Main(self.cfg, test_mode)
             x.process(*outp)
         except ImportError:
-            raise Exception("%s does not exist" % MODULE_PATH)
+            raise Exception("%s (%s) does not exist" % (MODULE_PATH, mod_path))
     
     def get_headers(self, msg):
         """Add special headers to existing sms headers."""
