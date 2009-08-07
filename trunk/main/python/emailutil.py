@@ -242,13 +242,6 @@ class EmailReader:
                 res[fname] = elem.get_payload(decode=True)
         return res
     
-    def respond_to_msg(self, contact, headers, text_content, attachments):
-        """Send email response using EmailSender class."""
-        email_send = EmailSender(self.cfg)
-        headers['subject'] = '[caseid-%s] Re: %s' % (headers['caseid'], headers['subject'])
-        if email_send.send_message(contact, headers, text_content, attachments):
-            log.info('sent to %s' % contact)
-    
 class EmailSender:
     def __init__(self, config):
         self.cfg = config

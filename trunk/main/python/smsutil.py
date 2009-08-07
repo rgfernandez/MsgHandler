@@ -133,13 +133,6 @@ class SmsReader:
         """Return sms attachments as dictionary."""
         return dict()
     
-    def respond_to_msg(self, contact, headers, text_content, attachments):
-        """Send sms response using SmsSender class."""
-        sms_send = SmsSender(self.cfg)
-        headers['subject'] = '[caseid-%s] Re: %s' % (headers['caseid'], headers['subject'])
-        if sms_send.send_message(contact, headers, text_content, attachments):
-            log.info('sent to %s' % contact)
-    
 class SmsSender:
     # BuddyWorks code from Eric Pareja and Bowei Du
     def __init__(self, config):
