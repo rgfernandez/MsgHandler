@@ -10,14 +10,14 @@ class Main:
     
     def process(self, contact, headers, text_content, attachments):
         if self.test_mode:
-            contact = self.get_reply_addr(headers)
+            contact = self.get_reply_addr(headers, contact)
             if contact:
                 self.respond_to_msg(contact, headers, text_content, attachments)
             return
         
         log.debug('\n%s\n%s\n%s\n%s', (contact, headers, text_content, attachments))
     
-    def get_reply_addr(self, headers):
+    def get_reply_addr(self, headers, contact=''):
         try:
             send_mode = headers['mode']
         except:
