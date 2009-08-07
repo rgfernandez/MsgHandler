@@ -10,10 +10,10 @@ sed -i -e "s:\(MHPATH=\).*:\1$MHPATH:" $MHPATH/bin/mh-unittest
 sed -i -e "s:\(MHPATH=\).*:\1$MHPATH:" $MHPATH/bin/smsevent
 
 # set permissions
-chmod 755 $MHPATH/bin/mhdaemon
-chmod 755 $MHPATH/bin/mh-unittest
-chmod 755 $MHPATH/bin/smsevent
+chmod 770 $MHPATH/bin/mhdaemon
+chmod 770 $MHPATH/bin/mh-unittest
+chmod 770 $MHPATH/bin/smsevent
 
-find $MHPATH -type d -name "log" | xargs chmod -R 770
-find $MHPATH/main -type f -name "test*py" | xargs chmod 770
-find $MHPATH/modules -type f -name "test*py" | xargs chmod 770
+find $MHPATH -type d -name "log" -exec chmod -R 770 {} \;
+find $MHPATH/main -type f -name "test*py" -exec chmod 770 {} \;
+find $MHPATH/modules -type f -name "test*py" -exec chmod 770 {} \;
