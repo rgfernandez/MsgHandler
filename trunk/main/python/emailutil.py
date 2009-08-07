@@ -85,7 +85,7 @@ class EmailReader:
             for i in self.get_unread():
                 msg = self.serv.fetch(i, "RFC822")
                 if msg[0]=='OK':
-                    self.serv.store(msgnum, '+FLAGS', '\\Seen')
+                    self.serv.store(i, '+FLAGS', '\\Seen')
                     self.run(msg[1][0][1], test_mode)
             time.sleep(self.sleep)
         self.logout()
@@ -95,24 +95,11 @@ class EmailReader:
         msg = self.get_message(emailtext)
         outp = self._parse(msg)
         log.info(outp)
-        if test_mode:
-            # send reply to test number
-            (contact, headers, text_content, attachments) = outp
-            
-            try:
-                test1 = self.cfg.get('email', 'test1')
-                test2 = self.cfg.get('email', 'test2')
-                upload_url = self.cfg.get('email', 'testurl')
-            except ConfigParser.NoOptionError, e:
-                raise ConfigError(str(e))
-            
-            if not headers['caseid']:
-                headers['caseid'] = '100'
-                headers['uploadurl'] = upload_url
-            contact = test1 if (contact==test2) else test2
-            self.respond_to_msg(contact, headers, text_content, attachments)
-        else:
-            self._process(*outp)
+        
+        try:
+            self._process(outp[1]['path'], outp, test_mode)
+        except KeyError, e:
+            pass
     
     def _parse(self, msg):
         """Parse email messages and return as tuple."""
@@ -123,13 +110,13 @@ class EmailReader:
         
         return (contact, headers, text_content, attachments)
     
-    def _process(self, contact, headers, text_content, attachments):
-        print headers
-        MODULE_PATH = os.path.join(project_path(),'modules',headers['path'],'python')
+    def _process(self, mod_path, outp, test_mode=False):
+        MODULE_PATH = os.path.join(project_path(),'modules',mod_path,'python')
         sys.path.append(MODULE_PATH)
         try:
-            import main
-            main.process(contact=contact, headers=headers, text_content=text_content, attachments=attachments)
+            from main import Main
+            x = Main(self.cfg, test_mode)
+            x.process(*outp)
         except ImportError:
             raise Exception("%s does not exist" % MODULE_PATH)
     

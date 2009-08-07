@@ -41,12 +41,11 @@ class SmsReader:
         msg = self.get_message(smstext)
         outp = self._parse(msg)
         log.info(outp)
-        if test_mode:
-            # send reply to test number
-            (contact, headers, text_content, attachments) = outp
-            self.respond_to_msg(self.cfg.get('sms', 'test'), headers, text_content, attachments)
-        else:
-            self._process(*outp)
+        
+        try:
+            self._process(outp[1]['path'], outp, test_mode)
+        except KeyError, e:
+            pass
     
     def _parse(self, msg):
         """Parse sms messages and return as tuple."""
@@ -58,12 +57,13 @@ class SmsReader:
         
         return (contact, headers, text_content, attachments)
     
-    def _process(self, contact, headers, text_content, attachments):
-        MODULE_PATH = os.path.join(project_path(),'modules',headers['path'],'python')
+    def _process(self, mod_path, outp, test_mode=False):
+        MODULE_PATH = os.path.join(project_path(),'modules',mod_path,'python')
         sys.path.append(MODULE_PATH)
         try:
-            import main
-            main.process(contact=contact, headers=headers, text_content=text_content, attachments=attachments)
+            from main import Main
+            x = Main(self.cfg, test_mode)
+            x.process(*outp)
         except ImportError:
             raise Exception("%s does not exist" % MODULE_PATH)
     
@@ -146,12 +146,12 @@ class SmsSender:
         spool = '-'
         
         try:
-            if isinstance(spool, str):
+            if isinstance(config, str):
                 spool = config
             else:
                 spool = config.get('sms', 'outgoing')
             if not os.path.exists(spool):
-                log.warning('%s smsd outgoing directory does not exist!' % spool)
+                log.error('%s smsd outgoing directory does not exist!' % spool)
                 spool = '-'
         except ConfigParser.NoSectionError, e:
             raise ConfigError(str(e))
