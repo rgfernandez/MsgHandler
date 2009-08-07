@@ -337,11 +337,10 @@ def main():
             action = 'start'
     if not cmp(action, 'start'):
         x = EmailReader(config_file)
-        log.info("Daemon PID %d" % startd('main', pidfile))
-        #return
         if test_file:
             x.run(open(test_file, 'r').read(), test_mode)
         else:
+            log.info("Daemon PID %d" % startd('main', pidfile))
             x.poll_email(test_mode)
 
 if __name__ == '__main__':
