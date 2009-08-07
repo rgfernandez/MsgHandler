@@ -97,7 +97,7 @@ class EmailReader:
         log.info(outp)
         
         try:
-            self._process(outp[1]['path'], outp, test_mode)
+            self._process(outp[1]['module'], outp, test_mode)
         except KeyError, e:
             pass
     
@@ -110,21 +110,21 @@ class EmailReader:
         
         return (contact, headers, text_content, attachments)
     
-    def _process(self, mod_path, outp, test_mode=False):
-        MODULE_PATH = os.path.join(project_path(),'modules',mod_path,'python')
+    def _process(self, mod_name, outp, test_mode=False):
+        MODULE_PATH = os.path.join(project_path(),'modules',mod_name,'python')
         sys.path.append(MODULE_PATH)
         try:
             from main import Main
             x = Main(self.cfg, test_mode)
             x.process(*outp)
         except ImportError:
-            raise Exception("%s (%s) does not exist" % (MODULE_PATH, mod_path))
+            raise Exception("%s (%s) does not exist" % (MODULE_PATH, mod_name))
     
     def get_headers(self, msg):
         """Add special headers to existing email headers."""
         headers = self.get_headers_orig(msg)
         headers = self.get_headers_spl(msg)
-        headers['path'], headers['keyword'] = self.get_keyword(headers)
+        headers['module'], headers['keyword'] = self.get_keyword(headers)
         headers['caseid'] = self.get_caseid(headers)
         headers['subject'] = self.get_subject(headers)
         headers['references'] = self.get_references(headers)
@@ -209,7 +209,7 @@ class EmailReader:
                     continue
                 rex = re.compile(elem)
                 if rex.match(keyphrase.strip().lower()):
-                    return (self.cfg.get(handler, 'path'), item)
+                    return (self.cfg.get(handler, 'mod_name'), item)
         return ('', '')
     
     def get_date(self, headers, date_fmt="%m-%d-%Y %H:%M:%S"):

@@ -43,7 +43,7 @@ class SmsReader:
         log.info(outp)
         
         try:
-            self._process(outp[1]['path'], outp, test_mode)
+            self._process(outp[1]['module'], outp, test_mode)
         except KeyError, e:
             pass
     
@@ -53,19 +53,19 @@ class SmsReader:
         contact = self.get_contact(headers)
         text_content = self.get_text_content(msg.get_payload())
         attachments = self.get_attachments(msg.get_payload())
-        headers['path'], headers['keyword'] = self.get_keyword(text_content)
+        headers['module'], headers['keyword'] = self.get_keyword(text_content)
         
         return (contact, headers, text_content, attachments)
     
-    def _process(self, mod_path, outp, test_mode=False):
-        MODULE_PATH = os.path.join(project_path(),'modules',mod_path,'python')
+    def _process(self, mod_name, outp, test_mode=False):
+        MODULE_PATH = os.path.join(project_path(),'modules',mod_name,'python')
         sys.path.append(MODULE_PATH)
         try:
             from main import Main
             x = Main(self.cfg, test_mode)
             x.process(*outp)
         except ImportError:
-            raise Exception("%s (%s) does not exist" % (MODULE_PATH, mod_path))
+            raise Exception("%s (%s) does not exist" % (MODULE_PATH, mod_name))
     
     def get_headers(self, msg):
         """Add special headers to existing sms headers."""
@@ -110,7 +110,7 @@ class SmsReader:
                     continue
                 rex = re.compile(elem)
                 if rex.match(text_content.strip().lower()):
-                    return (self.cfg.get(handler, 'path'), item)
+                    return (self.cfg.get(handler, 'mod_name'), item)
         return ('', '')
     
     def get_date(self, headers, date_fmt="%m-%d-%Y %H:%M:%S"):
