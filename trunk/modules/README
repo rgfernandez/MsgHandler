@@ -1,0 +1,19 @@
+###
+Rules for adding modules:
+1) Module directory structure, for uniformity:
+   <module name>
+       |-----> python (scripts/codes)
+       |-----> config (configuration files)
+       |-----> log (log files)
+       |-----> test (test modules)
+
+2) A 'main.py' file should be located inside the 'python' folder. The _template module is created for you to follow
+
+3) Add module name in "handlers" section, "enabled" option in the main config file.
+
+4) Add a new section in the config file, same as below:
+	[module_name]
+	path: /path/to/module/trunk/python
+	keywords: key1,key2,key3
+
+5) Add desired keyword in the "keyword" section
