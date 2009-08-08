@@ -34,10 +34,10 @@ def get_config(mod_name='', config_name=''):
         # actual path is given
         config_file = mod_name
     else:
-        if mod_name == 'main':
-            mod_name = ''
-        config_file = os.path.join(project_path(),'modules',mod_name,'config',config_name) if mod_name \
-            else os.path.join(project_path(),'main','config',config_name)
+        if ( (mod_name == 'main') or (mod_name == '') ):
+            config_file = os.path.join(project_path(),'main','config',config_name)
+        else:
+            config_file = os.path.join(project_path(),'modules',mod_name,'config',config_name)
     
     if not os.path.exists(config_file):
         raise ConfigError("%s not found" % config_file)
