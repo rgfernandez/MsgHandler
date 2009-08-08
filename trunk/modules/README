@@ -1,4 +1,9 @@
 ###
+Adding a module from the repository:
+1) cd path/to/<MsgHandler root path>/modules
+2) svn co http://telehealth.googlecode.com/svn/eccs/MsgHandler/branches/<module name>/ <module name>
+
+###
 Rules for adding modules:
 1) Module directory structure, for uniformity:
    <module name>
@@ -13,7 +18,7 @@ Rules for adding modules:
 
 4) Add a new section in the config file, same as below:
 	[module_name]
-	path: /path/to/module/trunk/python
+	mod_name: <module name>
 	keywords: key1,key2,key3
 
 5) Add desired keyword in the "keyword" section
