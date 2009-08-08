@@ -12,7 +12,7 @@ import re
 import datetime
 import email
 
-from mhtools import ConfigError
+from mhtools import get_config, ConfigError
 from mhtools import add_module
 
 log = logging.getLogger('smsutil')
@@ -174,7 +174,7 @@ class SmsSender:
 
 def help():
     """Return usage of module."""
-    return 'hello'
+    return 'config file format --> module:file. if no : is detected, assume exact path is given'
 
 def main():
     """Handle command line arguments."""
@@ -194,15 +194,11 @@ def main():
         elif o in ('-d', '--debug'):
             debug_level = logging.DEBUG
         elif o in ('-c', '--config-file'):
-            config_file = a
+            config_file = a.split(':')
         elif o in ('-t', '--test'):
             test_mode = True
     
-    if not os.path.exists(config_file):
-        raise ConfigError("%s not found" % config_file)
-    cfg = ConfigParser.ConfigParser()
-    cfg.read(config_file)
-    
+    cfg = get_config(*config_file)
     smsfile = args[0]
     if not os.path.exists(smsfile):
         raise Exception("Can't find smsfile %s" % smsfile)

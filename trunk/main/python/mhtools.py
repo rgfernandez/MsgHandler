@@ -3,11 +3,13 @@ import logging
 import sys
 import os
 
+import ConfigParser
+
 log = logging.getLogger('mhtools')
 
 #---------- os.path tools
 def project_path(cur_path=''):
-    """Return path to trunk."""
+    """Return path to root directory."""
     if not cur_path:
         cur_path = __file__
     real_path = os.path.realpath(cur_path)
@@ -25,6 +27,24 @@ def add_module(mod_name=''):
     MODULE_PATH = os.path.join(project_path(),'modules',mod_name,'python')
     sys.path.append(MODULE_PATH)
     return True
+
+def get_config(mod_name='', config_name=''):
+    """Return path to module config file."""
+    if not config_name:
+        # actual path is given
+        config_file = mod_name
+    else:
+        if mod_name == 'main':
+            mod_name = ''
+        config_file = os.path.join(project_path(),'modules',mod_name,'config',config_name) if mod_name \
+            else os.path.join(project_path(),'main','config',config_name)
+    
+    if not os.path.exists(config_file):
+        raise ConfigError("%s not found" % config_file)
+    
+    cfg = ConfigParser.ConfigParser()
+    cfg.read(config_file)
+    return cfg
 
 #---------- Exception tools
 class ConfigError(Exception):

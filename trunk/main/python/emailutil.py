@@ -26,10 +26,8 @@ from email import Encoders
 log = logging.getLogger('emailutil')
 
 class EmailReader:
-    def __init__(self, config_file):
-        self.cfg = ConfigParser.ConfigParser()
-        self.cfg.read(config_file)
-        
+    def __init__(self, config):
+        self.cfg = config
         try:
             self.email_params = {'server': self.cfg.get('email', 'imapserver'),
                                 'user': self.cfg.get('email', 'user'),
@@ -244,7 +242,6 @@ class EmailReader:
 class EmailSender:
     def __init__(self, config):
         self.cfg = config
-        
         try:
             self.email_params = {'server': self.cfg.get('email', 'smtpserver'),
                                 'user': self.cfg.get('email', 'user'),
@@ -311,15 +308,13 @@ def main():
         elif o in ('-d', '--debug'):
             debug_level = logging.DEBUG
         elif o in ('-c', '--config-file'):
-            config_file = a
+            config_file = a.split(':')
         elif o in ('-t', '--test'):
             test_mode = True
         elif o in ('-f', '--file'):
             test_file = a
     
-    if not os.path.exists(config_file):
-        raise ConfigError("%s not found" % config_file)
-    
+    cfg = get_config(*config_file)
     pidfile = 'email.pid'
     action = args[0]
     if not cmp(action, 'stop') or not cmp(action, 'restart'):
@@ -328,7 +323,7 @@ def main():
         if not cmp(action, 'restart'):
             action = 'start'
     if not cmp(action, 'start'):
-        x = EmailReader(config_file)
+        x = EmailReader(cfg)
         if test_file:
             x.run(open(test_file, 'r').read(), test_mode)
         else:
