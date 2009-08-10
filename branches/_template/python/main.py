@@ -21,3 +21,9 @@ class Main:
         # do processing for production here
     
     # add other methods here
+    
+    # respond_to_msg is optional
+    def respond_to_msg(self, contact, headers, text_content, attachments):
+        """Send msg response using XSender class."""
+        x = MsgSender(self.cfg, headers['mode'])
+        x.process(contact, headers, text_content, attachments)
