@@ -17,7 +17,7 @@ class Main:
                 self.respond_to_msg(contact, headers, text_content, attachments)
             return
         
-        log.debug('\n%s\n%s\n%s\n%s', (contact, headers, text_content, attachments))
+        log.debug('\n%s\n%s\n%s\n%s' % (contact, headers, text_content, attachments))
     
     def get_reply_addr(self, headers, contact=''):
         try:

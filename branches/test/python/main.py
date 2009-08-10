@@ -19,10 +19,10 @@ class Main:
             headers['mode'] = 'sms'
         if headers['keyword'] == 'emailtest':
             contact = 'pauline.user@gmail.com'
-            headers['mode'] = 'sms'
+            headers['mode'] = 'email'
         self.respond_to_msg(contact, headers, text_content, attachments)
         
-        log.debug('\n%s\n%s\n%s\n%s', (contact, headers, text_content, attachments))
+        log.debug('\n%s\n%s\n%s\n%s' % (contact, headers, text_content, attachments))
     
     def respond_to_msg(self, contact, headers, text_content, attachments):
         """Send msg response using XSender class."""
