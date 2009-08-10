@@ -1,6 +1,8 @@
 import logging
 import ConfigParser
 
+from msgutil import MsgSender
+
 log = logging.getLogger('chits-main')
 
 class Main:
@@ -36,21 +38,13 @@ class Main:
             if not headers['caseid']:
                 headers['caseid'] = '100'
                 headers['uploadurl'] = upload_url
+            headers['subject'] = '[caseid-%s] Re: %s' % (headers['caseid'], headers['subject'])
+            
             return test1 if (contact==test2) else test2
         else:
             raise Exception('mode %s not supported' % headers['mode'])
     
     def respond_to_msg(self, contact, headers, text_content, attachments):
         """Send msg response using XSender class."""
-        if (headers['mode'] == 'sms'):
-            from smsutil import SmsSender as Sender
-        elif (headers['mode'] == 'email'):
-            from emailutil import EmailSender as Sender
-        else:
-            raise Exception('mode %s not supported' % headers['mode'])
-        
-        sms_send = Sender(self.cfg)
-        headers['subject'] = '[caseid-%s] Re: %s' % (headers['caseid'], headers['subject'])
-        
-        if sms_send.send_message(contact, headers, text_content, attachments):
-            log.info('sent to %s' % contact)
+        x = MsgSender(self.cfg, headers['mode'])
+        x.process(contact, headers, text_content, attachments)

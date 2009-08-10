@@ -10,7 +10,7 @@ import ConfigParser
 
 from daemon import stopd, startd
 from mhtools import ConfigError
-from mhtools import add_module
+import msgutil
 
 import re
 import datetime
@@ -93,11 +93,15 @@ class EmailReader:
         msg = self.get_message(emailtext)
         outp = self._parse(msg)
         log.info(outp)
+        (contact, headers, text_content, attachments) = outp
         
         try:
-            self._process(outp[1]['module'], outp, test_mode)
+            mod_name = headers['module']
         except KeyError, e:
-            pass
+            raise Exception('no module given')
+        
+        x = msgutil.MsgReader(self.cfg, mod_name, test_mode)
+        x.process(*outp)
     
     def _parse(self, msg):
         """Parse email messages and return as tuple."""
@@ -107,15 +111,6 @@ class EmailReader:
         attachments = self.get_attachments(msg.get_payload())
         
         return (contact, headers, text_content, attachments)
-    
-    def _process(self, mod_name, outp, test_mode=False):
-        add_module(mod_name)
-        try:
-            from main import Main
-            x = Main(self.cfg, test_mode)
-            x.process(*outp)
-        except ImportError:
-            raise Exception("module '%s' does not exist" % mod_name)
     
     def get_headers(self, msg):
         """Add special headers to existing email headers."""

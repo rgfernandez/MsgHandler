@@ -13,7 +13,7 @@ import datetime
 import email
 
 from mhtools import get_config, ConfigError
-from mhtools import add_module
+import msgutil
 
 log = logging.getLogger('smsutil')
 
@@ -41,11 +41,15 @@ class SmsReader:
         msg = self.get_message(smstext)
         outp = self._parse(msg)
         log.info(outp)
+        (contact, headers, text_content, attachments) = outp
         
         try:
-            self._process(outp[1]['module'], outp, test_mode)
+            mod_name = headers['module']
         except KeyError, e:
-            pass
+            raise Exception('no module given')
+        
+        x = msgutil.MsgReader(self.cfg, mod_name, test_mode)
+        x.process(*outp)
     
     def _parse(self, msg):
         """Parse sms messages and return as tuple."""
@@ -56,15 +60,6 @@ class SmsReader:
         headers['module'], headers['keyword'] = self.get_keyword(text_content)
         
         return (contact, headers, text_content, attachments)
-    
-    def _process(self, mod_name, outp, test_mode=False):
-        add_module(mod_name)
-        try:
-            from main import Main
-            x = Main(self.cfg, test_mode)
-            x.process(*outp)
-        except ImportError:
-            raise Exception("module '%s' does not exist" % mod_name)
     
     def get_headers(self, msg):
         """Add special headers to existing sms headers."""
