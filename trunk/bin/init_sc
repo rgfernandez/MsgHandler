@@ -16,7 +16,7 @@ echo MsgHandler path written to files in \'bin\' directory
 # set permissions
 chmod 770 $MHPATH/bin/mhdaemon
 chmod 770 $MHPATH/bin/mh-unittest
-chmod 770 $MHPATH/bin/smsevent
+chmod 775 $MHPATH/bin/smsevent	# requires readable by all (not sure for execute)
 
 echo Permissions modified to files in \'bin\' directory
 
