@@ -3,7 +3,7 @@ import ConfigParser
 
 from msgutil import MsgSender
 
-log = logging.getLogger('chits-main')
+log = logging.getLogger('test-main')
 
 class Main:
     def __init__(self, cfg, test_mode=False):
