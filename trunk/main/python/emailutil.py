@@ -32,7 +32,6 @@ class EmailReader:
             
             if not self.cfg.has_section('headers'):
                 raise ConfigParser.NoSectionError
-            log.debug('Using %s' % (str(self.email_params)))
         except ConfigParser.NoSectionError, e:
             raise ConfigError(str(e))
         except ConfigParser.NoOptionError, e:
