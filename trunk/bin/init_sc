@@ -7,18 +7,20 @@ MHPATH=`echo $CPATH$IPATH | sed "s:/bin/init_sc$::"`
 echo MsgHandler path set to $MHPATH
 
 # substitute path locations
+sed -i -e "s:\(MHPATH=\).*:\1$MHPATH:" $MHPATH/bin/smsevent
+sed -i -e "s:\(MHPATH=\).*:\1$MHPATH:" $MHPATH/bin/emailevent
+
 sed -i -e "s:\(MHPATH=\).*:\1$MHPATH:" $MHPATH/bin/mhdaemon
 sed -i -e "s:\(MHPATH=\).*:\1$MHPATH:" $MHPATH/bin/mh-unittest
-sed -i -e "s:\(MHPATH=\).*:\1$MHPATH:" $MHPATH/bin/smsevent
 
 echo MsgHandler path written to files in \'bin\' directory
 
 # set permissions
-chmod 770 $MHPATH/bin/mhdaemon
-chmod 770 $MHPATH/bin/mh-unittest
-
 chmod 775 $MHPATH/bin/smsevent	# requires readable by all (not sure for execute)
 chmod 775 $MHPATH/bin/emailevent	# requires readable by all (not sure for execute)
+
+chmod 770 $MHPATH/bin/mhdaemon
+chmod 770 $MHPATH/bin/mh-unittest
 
 echo Permissions modified to files in \'bin\' directory
 
