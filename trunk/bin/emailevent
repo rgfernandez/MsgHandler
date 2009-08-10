@@ -1,0 +1,10 @@
+#!/bin/sh
+
+# taken from martian.upm.edu.ph
+# code from Eric Pareja and Bowei Du
+
+# $1 is the filename of the email.
+
+MHPATH=/path/to/MsgHandler/trunk
+
+python $MHPATH/main/python/emailutil.py -c main:main.conf $1
