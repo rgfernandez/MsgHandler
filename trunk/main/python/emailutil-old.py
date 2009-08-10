@@ -14,8 +14,9 @@ import msgutil
 
 import re
 import datetime
-
+import imaplib
 import smtplib
+
 import email
 from email.MIMEMultipart import MIMEMultipart
 from email.MIMEBase import MIMEBase
@@ -28,6 +29,10 @@ class EmailReader:
     def __init__(self, config):
         self.cfg = config
         try:
+            self.email_params = {'server': self.cfg.get('email', 'imapserver'),
+                                'user': self.cfg.get('email', 'user'),
+                                'passwd': self.cfg.get('email', 'passwd')}
+            self.sleep = int(self.cfg.get('email', 'sleep'))
             self.mode = self.cfg.get('email', 'mode')
             
             if not self.cfg.has_section('headers'):
@@ -38,9 +43,50 @@ class EmailReader:
         except ConfigParser.NoOptionError, e:
             raise ConfigError(str(e))
     
+    def login(self):
+        """Login to email address via secure IMAP4."""
+        self.serv = imaplib.IMAP4_SSL(self.email_params['server'])
+        try:
+            self.serv.login(self.email_params['user'], self.email_params['passwd'])
+            self.serv.select()
+        except imaplib.error:
+            self.logout()
+            raise
+    
+    def logout(self):
+        """Logout email."""
+        try:
+            self.serv.close()
+        except imaplib.error:
+            pass
+        self.serv.logout()
+    
+    def get_unread(self):
+        """Return number of unread messages."""
+        self.serv.recent()
+        resp = self.serv.search(None, "UNSEEN")
+        if resp[0]!='OK':
+            return []
+        resp = resp[1][0].split()
+        if resp:
+            log.info("%d message(s) unread" % len(resp))
+        return resp
+    
     def get_message(self, msgtext):
         """Get email from file and return as email object."""
         return email.message_from_string(msgtext)
+    
+    def poll_email(self, test_mode=False):
+        """Check email from time to time. Insert into database and send an autoreply."""
+        self.login()
+        while True:
+            for i in self.get_unread():
+                msg = self.serv.fetch(i, "RFC822")
+                if msg[0]=='OK':
+                    self.serv.store(i, '+FLAGS', '\\Seen')
+                    self.run(msg[1][0][1], test_mode)
+            time.sleep(self.sleep)
+        self.logout()
     
     def run(self, emailtext='', test_mode=False):
         """If test mode, forward message. Else, call appropriate module."""
@@ -192,7 +238,9 @@ class EmailSender:
     def __init__(self, config):
         self.cfg = config
         try:
-            self.email_user = self.cfg.get('email', 'user')
+            self.email_params = {'server': self.cfg.get('email', 'smtpserver'),
+                                'user': self.cfg.get('email', 'user'),
+                                'passwd': self.cfg.get('email', 'passwd')}
         except ConfigParser.NoSectionError, e:
             raise ConfigError(str(e))
         except ConfigParser.NoOptionError, e:
@@ -228,8 +276,13 @@ class EmailSender:
     
     def send(self, contact, msg):
         """Send email message using SMTP."""
-        serv = smtplib.SMTP('localhost')
-        serv.sendmail(self.email_user, contact, msg)
+        serv = smtplib.SMTP(self.email_params['server'])
+        serv.ehlo()
+        serv.starttls()
+        serv.ehlo()
+        serv.login(self.email_params['user'], self.email_params['passwd'])
+        
+        serv.sendmail('', contact, msg)
         serv.quit()
 
 def main():
@@ -241,7 +294,7 @@ def main():
     FORMAT = "%(asctime)-15s:%(levelname)-3s:%(name)-8s %(message)s"
     
     logging.basicConfig(level=debug_level, format = FORMAT)
-    opts, args = getopt.getopt(sys.argv[1:], 'hdtc:', ['help', 'debug', 'config-file=', 'test'])
+    opts, args = getopt.getopt(sys.argv[1:], 'hdtf:c:', ['help', 'debug', 'config-file=', 'test', 'file='])
     
     for o, a in opts:
         if o in ('-h', '--help'):
@@ -257,13 +310,20 @@ def main():
             test_file = a
     
     cfg = get_config(*config_file)
-    emailfile = args[0]
-    if not os.path.exists(emailfile):
-        raise Exception("Can't find emailfile %s" % emailfile)
-    emailtext = open(emailfile, 'r').read()
-    
-    x = EmailReader(cfg)
-    x.run(emailtext, test_mode)
+    pidfile = 'email.pid'
+    action = args[0]
+    if not cmp(action, 'stop') or not cmp(action, 'restart'):
+        for elem in stopd('main', pidfile):
+            log.error(elem)
+        if not cmp(action, 'restart'):
+            action = 'start'
+    if not cmp(action, 'start'):
+        x = EmailReader(cfg)
+        if test_file:
+            x.run(open(test_file, 'r').read(), test_mode)
+        else:
+            log.info("Daemon PID %d" % startd('main', pidfile))
+            x.poll_email(test_mode)
 
 if __name__ == '__main__':
     try:
