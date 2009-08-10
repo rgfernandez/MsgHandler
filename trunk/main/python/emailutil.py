@@ -9,7 +9,7 @@ import tempfile
 import ConfigParser
 
 from daemon import stopd, startd
-from mhtools import ConfigError
+from mhtools import get_config, ConfigError
 import msgutil
 
 import re
