@@ -63,7 +63,7 @@ class report:
     def get_pre_apt(self, health_center=''):
         """Return contact and body of message from uuid."""
         cur = self.conn.cursor()
-        conds = {'timestampdiff(hour, create_time, now())': 0}
+        conds = {'timestampdiff(day, appointment_time, now())': '0'}
         if health_center:
             conds['health_center'] = health_center
         qry = self.get('patient_apts JOIN patient_regs ON patient_regs.id=patient_reg_id', ['health_center', 'count(health_center)'], conds, 'GROUP BY health_center')
@@ -75,7 +75,7 @@ class report:
     def get_post_apt(self, health_center=''):
         """Return contact and body of message from uuid."""
         cur = self.conn.cursor()
-        conds = {'timestampdiff(hour, appointment_time, now())': 0,
+        conds = {'timestampdiff(day, appointment_time, now())': '0',
                  '(patient_reg_id NOT IN (SELECT patient_reg_id FROM patient_apts WHERE timestampdiff(day, appointment_time, now()) < 0))': ''}
         if health_center:
             conds['health_center'] = health_center
@@ -88,7 +88,7 @@ class report:
     def get_post_reg(self, health_center=''):
         """Return contact and body of message from uuid."""
         cur = self.conn.cursor()
-        conds = {'timestampdiff(hour, create_time, now())': 0}
+        conds = {'timestampdiff(day, create_time, now())': '0'}
         if health_center:
             conds['health_center'] = health_center
         qry = self.get('patient_regs', ['health_center', 'count(health_center)'], conds, 'GROUP BY health_center')
@@ -142,7 +142,11 @@ def main():
         elif o in ('-t', '--test'):
             test_mode = True
     
-    contact = args[0]
+    try:
+        contact = args[0]
+    except:
+        contact = ''
+    
     try:
         hc_itm = args[1]
     except:
@@ -159,7 +163,7 @@ def main():
     db = report(**cfg)
     x = db.report(mode, hc_itm)
     print x
-    if x:
+    if x and contact:
         SmsSender('/var/spool/sms/outgoing').send_message(contact, {}, x, {})
 
 if __name__ == '__main__':

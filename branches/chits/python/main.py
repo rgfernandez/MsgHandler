@@ -2,6 +2,9 @@ import logging
 import ConfigParser
 
 from msgutil import MsgSender
+import dbutil
+
+from mhtools import get_config
 
 log = logging.getLogger('chits-main')
 
@@ -17,7 +20,50 @@ class Main:
                 self.respond_to_msg(contact, headers, text_content, attachments)
             return
         
+        keyword = headers['keyword']
+        if keyword == 'default':
+            (contact, headers, text_content, attachments) = self.key_default(get_config('chits','main.conf'), contact)
+        
         log.debug('\n%s\n%s\n%s\n%s' % (contact, headers, text_content, attachments))
+    
+    def key_default(self, cfg, contact):
+        contact = '639233424712'
+        db_params = {'host': cfg.get('database', 'host'),
+                     'port': cfg.get('database', 'port'),
+                     'user': cfg.get('database', 'user'),
+                     'passwd': cfg.get('database', 'passwd'),
+                     'db': cfg.get('database', 'db')
+                     }
+        db = dbutil.DBWrapper(**db_params)
+        hcntr = self.db_get_health_center(db, contact)
+        if hcntr == 'admin':
+            hcntr = ''
+        dflts = self.db_get_defaults(db, hcntr)
+        text_content = "== NThC reporting system ==\nDefaulting patients (by id):\n%s" % (', '.join(dflts))
+        
+        return contact, {}, text_content, {}
+    
+    def db_get_health_center(self, db, contact):
+        cur = db.conn.cursor()
+        qry = self.get('hw_regs', ['health_center', ], {'cell_no': contact})
+        cur.execute(*qry)
+        x = cur.fetchall()
+        if x:
+            return x[0][0]
+        else:
+            raise Exception('%s not in health worker list' % contact)
+    
+    def db_get_defaults(self, db, health_center):
+        cur = db.conn.cursor()
+        conds = {'timestampdiff(day, appointment_time, now())': '0'}
+        if health_center:
+            conds['health_center'] = health_center
+        qry = self.get('patient_apts JOIN patient_regs ON patient_regs.id=patient_reg_id', ['patient_reg_id', ], conds)
+        cur.execute(*qry)
+        x = cur.fetchall()
+        return tuple([elem for elem in filter(None, map((lambda x: x if x[0] else ''), x))])
+    
+        #SELECT patient_reg_id FROM patient_apts JOIN patient_regs ON patient_regs.id=patient_reg_id WHERE (patient_reg_id NOT IN (SELECT patient_reg_id FROM patient_apts WHERE timestampdiff(day, appointment_time, now()) < 0)) AND timestampdiff(day, appointment_time, now())=0 AND health_center='SAN PABLO'
     
     def get_reply_addr(self, headers, contact=''):
         try:
