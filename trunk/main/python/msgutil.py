@@ -1,24 +1,55 @@
 import logging
+import re
 
 from mhtools import add_module
 
 log = logging.getLogger('msgutil')
 
 class MsgReader:
-    def __init__(self, config, mod_name='', test_mode=False):
+    def __init__(self, config, test_mode=False):
         self.cfg = config
-        self.mod_name = mod_name
         self.test_mode = test_mode
+    
+    def process(self, contact, headers, text_content, attachments):
+        headers = self.get_module(headers)
+        
+        log.debug(headers)
+        
+        msg_mod = self.import_module(headers['module'])
+        msg_mod.process(contact, headers, text_content, attachments)
+    
+    def get_module(self, headers):
+        """Add special headers to existing headers."""
+        if 'subject' not in headers:
+            headers['module'], headers['keyword'] = '', ''
+        else:
+            headers['module'], headers['keyword'] = self.get_keyword(headers['subject'])
+        
+        return headers
+    
+    def get_keyword(self, subject):
+        """Return module and keyword."""
+        for handler in self.cfg.get('handlers', 'enabled').split(','):
+            keys = self.cfg.get(handler, 'keywords').split(',')
+            for (item, elem) in self.cfg.items('keywords'):
+                if item not in keys:
+                    continue
+                rex = re.compile(elem)
+                if rex.match(subject.strip().lower()):
+                    return (self.cfg.get(handler, 'mod_name'), item)
+        return ('', '')
+    
+    def import_module(self, mod_name):
+        """Import module and check for errors."""
+        if not mod_name:
+            raise Exception("no module match for keyword")
         
         add_module(mod_name)
         try:
             from main import Main
-            self.msg_mod = Main(self.cfg, test_mode)
+            return Main(self.cfg, self.test_mode)
         except ImportError:
             raise Exception("module '%s' does not exist" % mod_name)
-    
-    def process(self, contact, headers, text_content, attachments):
-        self.msg_mod.process(contact, headers, text_content, attachments)
     
 class MsgSender:
     def __init__(self, config, mode=''):

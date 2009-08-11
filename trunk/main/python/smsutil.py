@@ -43,12 +43,7 @@ class SmsReader:
         log.info(outp)
         (contact, headers, text_content, attachments) = outp
         
-        try:
-            mod_name = headers['module']
-        except KeyError, e:
-            raise Exception('no module given')
-        
-        x = msgutil.MsgReader(self.cfg, mod_name, test_mode)
+        x = msgutil.MsgReader(self.cfg, test_mode)
         x.process(*outp)
     
     def _parse(self, msg):
@@ -57,7 +52,9 @@ class SmsReader:
         contact = self.get_contact(headers)
         text_content = self.get_text_content(msg.get_payload())
         attachments = self.get_attachments(msg.get_payload())
-        headers['module'], headers['keyword'] = self.get_keyword(text_content)
+        #headers['module'], headers['keyword'] = self.get_keyword(text_content)
+        
+        headers['subject'] = text_content
         
         return (contact, headers, text_content, attachments)
     
