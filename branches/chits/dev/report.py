@@ -63,7 +63,7 @@ class report:
     def get_pre_apt(self, health_center=''):
         """Return contact and body of message from uuid."""
         cur = self.conn.cursor()
-        conds = {'(timestampdiff(hour, create_time, now()) BETWEEN 0 AND 24)': ''}
+        conds = {'timestampdiff(hour, create_time, now())': 0}
         if health_center:
             conds['health_center'] = health_center
         qry = self.get('patient_apts JOIN patient_regs ON patient_regs.id=patient_reg_id', ['health_center', 'count(health_center)'], conds, 'GROUP BY health_center')
@@ -75,8 +75,8 @@ class report:
     def get_post_apt(self, health_center=''):
         """Return contact and body of message from uuid."""
         cur = self.conn.cursor()
-        conds = {'(timestampdiff(hour, appointment_time, now()) BETWEEN 0 AND 24)': '',
-                 '(patient_reg_id NOT IN (SELECT patient_reg_id FROM patient_apts WHERE timestampdiff(hour, appointment_time, now()) < 0))': ''}
+        conds = {'timestampdiff(hour, appointment_time, now())': 0,
+                 '(patient_reg_id NOT IN (SELECT patient_reg_id FROM patient_apts WHERE timestampdiff(day, appointment_time, now()) < 0))': ''}
         if health_center:
             conds['health_center'] = health_center
         qry = self.get('patient_apts JOIN patient_regs ON patient_regs.id=patient_reg_id', ['health_center', 'count(health_center)'], conds, 'GROUP BY health_center')
@@ -88,7 +88,7 @@ class report:
     def get_post_reg(self, health_center=''):
         """Return contact and body of message from uuid."""
         cur = self.conn.cursor()
-        conds = {'(timestampdiff(hour, create_time, now()) BETWEEN 0 AND 24)': ''}
+        conds = {'timestampdiff(hour, create_time, now())': 0}
         if health_center:
             conds['health_center'] = health_center
         qry = self.get('patient_regs', ['health_center', 'count(health_center)'], conds, 'GROUP BY health_center')
