@@ -218,7 +218,11 @@ class Sender:
     def send(self, contact, msg):
         """Send email message using SMTP."""
         serv = smtplib.SMTP('localhost')
-        serv.sendmail(getpass.getuser(), contact, msg)
+        try:
+            serv.sendmail(getpass.getuser(), contact, msg)
+        except smtplib.SMTPSenderRefused:
+            # hack for "misconfigured" servers
+            serv.sendmail(getpass.getuser()+self.cfg.get('email', 'server'), contact, msg)
         serv.quit()
 
 def main():
