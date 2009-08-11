@@ -22,7 +22,7 @@ class Main:
         
         keyword = headers['keyword']
         if keyword == 'default':
-            (contact, headers, text_content, attachments) = self.key_default(get_config('chits','main.conf'), contact)
+            text_content = self.key_default(get_config('chits','main.conf'), contact)
         
         log.debug('\n%s\n%s\n%s\n%s' % (contact, headers, text_content, attachments))
         self.respond_to_msg(contact, headers, text_content, attachments)
@@ -39,7 +39,7 @@ class Main:
         dflts = self.db_get_defaults(db, hcntr)
         text_content = "== NThC reporting system ==\nDefaulting patients for %s (by id):\n%s" % (hcntr, ', '.join(dflts))
         
-        return contact, {}, text_content, {}
+        return text_content
     
     def db_get_health_center(self, db, contact):
         cur = db.conn.cursor()
