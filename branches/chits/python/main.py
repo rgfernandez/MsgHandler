@@ -27,7 +27,6 @@ class Main:
         log.debug('\n%s\n%s\n%s\n%s' % (contact, headers, text_content, attachments))
     
     def key_default(self, cfg, contact):
-        contact = '639233424712'
         db_params = {'host': cfg.get('database', 'host'),
                      'port': cfg.get('database', 'port'),
                      'user': cfg.get('database', 'user'),
