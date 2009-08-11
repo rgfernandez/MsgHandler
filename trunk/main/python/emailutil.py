@@ -65,7 +65,6 @@ class Reader:
         """Add special headers to existing email headers."""
         headers = self.get_headers_orig(msg)
         headers = self.get_headers_spl(msg)
-        #headers['module'], headers['keyword'] = self.get_keyword(headers)
         headers['caseid'] = self.get_caseid(headers)
         headers['subject'] = self.get_subject(headers)
         headers['references'] = self.get_references(headers)
@@ -135,23 +134,6 @@ class Reader:
             return ' '.join(refs)
         else:
             return headers['message-id']
-    
-    def get_keyword(self, headers):
-        """Return keyword."""
-        if 'caseid' in headers:
-            keyphrase = 'followup'
-        else:
-            keyphrase = headers['subject']
-        
-        for handler in self.cfg.get('handlers', 'enabled').split(','):
-            keys = self.cfg.get(handler, 'keywords').split(',')
-            for (item, elem) in self.cfg.items('keywords'):
-                if item not in keys:
-                    continue
-                rex = re.compile(elem)
-                if rex.match(keyphrase.strip().lower()):
-                    return (self.cfg.get(handler, 'mod_name'), item)
-        return ('', '')
     
     def get_date(self, headers, date_fmt="%m-%d-%Y %H:%M:%S"):
         """Return formatted date as string."""

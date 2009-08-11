@@ -52,7 +52,6 @@ class Reader:
         contact = self.get_contact(headers)
         text_content = self.get_text_content(msg.get_payload())
         attachments = self.get_attachments(msg.get_payload())
-        #headers['module'], headers['keyword'] = self.get_keyword(text_content)
         
         headers['subject'] = text_content
         
@@ -62,7 +61,6 @@ class Reader:
         """Add special headers to existing sms headers."""
         headers = self.get_headers_orig(msg)
         headers = self.get_headers_spl(msg)
-        #headers['keyword'] = self.get_keyword(headers)
         headers['date'] = self.get_date(headers)
         headers['mode'] = self.mode
         
@@ -91,18 +89,6 @@ class Reader:
         if 'from' in headers:
             return email.utils.parseaddr(headers['from'])[1]
         return ''
-    
-    def get_keyword(self, text_content):
-        """Return keyword."""
-        for handler in self.cfg.get('handlers', 'enabled').split(','):
-            keys = self.cfg.get(handler, 'keywords').split(',')
-            for (item, elem) in self.cfg.items('keywords'):
-                if item not in keys:
-                    continue
-                rex = re.compile(elem)
-                if rex.match(text_content.strip().lower()):
-                    return (self.cfg.get(handler, 'mod_name'), item)
-        return ('', '')
     
     def get_date(self, headers, date_fmt="%m-%d-%Y %H:%M:%S"):
         """Return formatted date as string."""
