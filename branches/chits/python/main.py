@@ -36,10 +36,8 @@ class Main:
                      }
         db = dbutil.DbWrapper(**db_params)
         hcntr = self.db_get_health_center(db, contact)
-        if hcntr == 'admin':
-            hcntr = ''
         dflts = self.db_get_defaults(db, hcntr)
-        text_content = "== NThC reporting system ==\nDefaulting patients (by id):\n%s" % (', '.join(dflts))
+        text_content = "== NThC reporting system ==\nDefaulting patients for %s (by id):\n%s" % (hcntr, ', '.join(dflts))
         
         return contact, {}, text_content, {}
     
@@ -56,12 +54,12 @@ class Main:
     def db_get_defaults(self, db, health_center):
         cur = db.conn.cursor()
         conds = {'timestampdiff(day, appointment_time, now())': '0'}
-        if health_center:
+        if health_center != 'admin':
             conds['health_center'] = health_center
         qry = db.get('patient_apts JOIN patient_regs ON patient_regs.id=patient_reg_id', ['patient_reg_id', ], conds)
         cur.execute(*qry)
         x = cur.fetchall()
-        return tuple([elem for elem in filter(None, map((lambda x: x if x[0] else ''), x))])
+        return tuple(['%s' % elem[0] for elem in x])
     
         #SELECT patient_reg_id FROM patient_apts JOIN patient_regs ON patient_regs.id=patient_reg_id WHERE (patient_reg_id NOT IN (SELECT patient_reg_id FROM patient_apts WHERE timestampdiff(day, appointment_time, now()) < 0)) AND timestampdiff(day, appointment_time, now())=0 AND health_center='SAN PABLO'
     
