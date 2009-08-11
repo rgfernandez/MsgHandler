@@ -34,7 +34,7 @@ class Main:
                      'passwd': cfg.get('database', 'passwd'),
                      'db': cfg.get('database', 'db')
                      }
-        db = dbutil.DBWrapper(**db_params)
+        db = dbutil.DbWrapper(**db_params)
         hcntr = self.db_get_health_center(db, contact)
         if hcntr == 'admin':
             hcntr = ''
