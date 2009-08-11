@@ -15,10 +15,10 @@ class Main:
             pass
         
         if headers['keyword'] == 'smstest':
-            contact = '639233424712'
+            contact = headers['subject'].split()[1]
             headers['mode'] = 'sms'
         if headers['keyword'] == 'emailtest':
-            contact = 'pauline.user@gmail.com'
+            contact = headers['subject'].split()[1]
             headers['mode'] = 'email'
         self.respond_to_msg(contact, headers, text_content, attachments)
         
