@@ -11,6 +11,7 @@ import ConfigParser
 from daemon import stopd, startd
 from mhtools import get_config, ConfigError
 import msgutil
+import getpass
 
 import re
 import datetime
@@ -185,12 +186,6 @@ class Reader:
 class Sender:
     def __init__(self, config):
         self.cfg = config
-        try:
-            self.email_user = self.cfg.get('email', 'user')
-        except ConfigParser.NoSectionError, e:
-            raise ConfigError(str(e))
-        except ConfigParser.NoOptionError, e:
-            raise ConfigError(str(e))
     
     def send_message(self, contact, headers, text_content, attachments):
         """Construct email message to send and return True."""
@@ -223,7 +218,7 @@ class Sender:
     def send(self, contact, msg):
         """Send email message using SMTP."""
         serv = smtplib.SMTP('localhost')
-        serv.sendmail(self.email_user, contact, msg)
+        serv.sendmail(getpass.getuser(), contact, msg)
         serv.quit()
 
 def main():
