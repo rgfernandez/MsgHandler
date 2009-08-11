@@ -45,7 +45,7 @@ class Main:
     
     def db_get_health_center(self, db, contact):
         cur = db.conn.cursor()
-        qry = self.get('hw_regs', ['health_center', ], {'cell_no': contact})
+        qry = db.get('hw_regs', ['health_center', ], {'cell_no': contact})
         cur.execute(*qry)
         x = cur.fetchall()
         if x:
@@ -58,7 +58,7 @@ class Main:
         conds = {'timestampdiff(day, appointment_time, now())': '0'}
         if health_center:
             conds['health_center'] = health_center
-        qry = self.get('patient_apts JOIN patient_regs ON patient_regs.id=patient_reg_id', ['patient_reg_id', ], conds)
+        qry = db.get('patient_apts JOIN patient_regs ON patient_regs.id=patient_reg_id', ['patient_reg_id', ], conds)
         cur.execute(*qry)
         x = cur.fetchall()
         return tuple([elem for elem in filter(None, map((lambda x: x if x[0] else ''), x))])
