@@ -17,7 +17,7 @@ import msgutil
 
 log = logging.getLogger('smsutil')
 
-class SmsReader:
+class Reader:
     def __init__(self, config):
         self.cfg = config
         try:
@@ -124,7 +124,7 @@ class SmsReader:
         """Return sms attachments as dictionary."""
         return dict()
     
-class SmsSender:
+class Sender:
     # BuddyWorks code from Eric Pareja and Bowei Du
     def __init__(self, config):
         spool = '-'
@@ -196,7 +196,7 @@ def main():
         raise Exception("Can't find smsfile %s" % smsfile)
     smstext = open(smsfile, 'r').read()
     
-    x = SmsReader(cfg)
+    x = Reader(cfg)
     x.run(smstext, test_mode)
 
 if __name__ == '__main__':

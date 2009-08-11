@@ -59,9 +59,9 @@ class MsgSender:
         if not self.mode:
             raise Exception('no mode given')
         elif (self.mode == 'sms'):
-            from smsutil import SmsSender as Sender
+            from smsutil import Sender
         elif (self.mode == 'email'):
-            from emailutil import EmailSender as Sender
+            from emailutil import Sender
         else:
             raise Exception('mode %s not supported' % headers['mode'])
         

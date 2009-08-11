@@ -24,7 +24,7 @@ from email import Encoders
 
 log = logging.getLogger('emailutil')
 
-class EmailReader:
+class Reader:
     def __init__(self, config):
         self.cfg = config
         try:
@@ -182,7 +182,7 @@ class EmailReader:
                 res[fname] = elem.get_payload(decode=True)
         return res
     
-class EmailSender:
+class Sender:
     def __init__(self, config):
         self.cfg = config
         try:
@@ -256,7 +256,7 @@ def main():
         raise Exception("Can't find emailfile %s" % emailfile)
     emailtext = open(emailfile, 'r').read()
     
-    x = EmailReader(cfg)
+    x = Reader(cfg)
     x.run(emailtext, test_mode)
 
 if __name__ == '__main__':
