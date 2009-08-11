@@ -25,6 +25,7 @@ class Main:
             (contact, headers, text_content, attachments) = self.key_default(get_config('chits','main.conf'), contact)
         
         log.debug('\n%s\n%s\n%s\n%s' % (contact, headers, text_content, attachments))
+        self.respond_to_msg(contact, headers, text_content, attachments)
     
     def key_default(self, cfg, contact):
         db_params = {'host': cfg.get('database', 'host'),
