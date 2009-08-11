@@ -37,7 +37,7 @@ class Main:
         db = dbutil.DbWrapper(**db_params)
         hcntr = self.db_get_health_center(db, contact)
         dflts = self.db_get_defaults(db, hcntr)
-        text_content = "== NThC report for %s ==\nDefaulting patients:\n%s" % (hcntr, ', '.join(dflts))
+        text_content = "== NThC report for %s ==\nPatients expected to visit the health center:\n%s" % (hcntr, ', '.join(dflts))
         
         return text_content
     
@@ -59,7 +59,7 @@ class Main:
         qry = db.get('patient_apts JOIN patient_regs ON patient_regs.id=patient_reg_id', ['patient_reg_id', ], conds)
         cur.execute(*qry)
         x = cur.fetchall()
-        return tuple(['%s' % elem[0] for elem in x])
+        return tuple(['T%04d' % elem[0] for elem in x])
     
         #SELECT patient_reg_id FROM patient_apts JOIN patient_regs ON patient_regs.id=patient_reg_id WHERE (patient_reg_id NOT IN (SELECT patient_reg_id FROM patient_apts WHERE timestampdiff(day, appointment_time, now()) < 0)) AND timestampdiff(day, appointment_time, now())=0 AND health_center='SAN PABLO'
     
