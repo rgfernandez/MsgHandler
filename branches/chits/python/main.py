@@ -37,7 +37,7 @@ class Main:
         db = dbutil.DbWrapper(**db_params)
         hcntr = self.db_get_health_center(db, contact)
         dflts = self.db_get_defaults(db, hcntr)
-        text_content = "== NThC reporting system ==\nDefaulting patients for %s (by id):\n%s" % (hcntr, ', '.join(dflts))
+        text_content = "== NThC report for %s ==\nDefaulting patients:\n%s" % (hcntr, ', '.join(dflts))
         
         return text_content
     
