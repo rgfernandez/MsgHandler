@@ -2,9 +2,6 @@
 
 MHPATH=/path/to/MsgHandler/trunk
 
-# main folder
-python $MHPATH/main/python/emailutil.py -c $MHPATH/main/config/main.conf $*
-
 # modules folder
 
 # (old) python folder
