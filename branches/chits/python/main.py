@@ -36,7 +36,7 @@ class Main:
                      }
         db = dbutil.DbWrapper(**db_params)
         #hcntr = self.db_get_health_center(db, contact)
-        hcntr = 'admin'
+        hcntr = 'SAN PABLO'
         if hcntr == '':
             db.close()
             # close db connection first!
@@ -44,17 +44,19 @@ class Main:
         elif hcntr == 'admin':
             hcntr = ''
         dflts = self.db_get_defaults(db, hcntr)
+        print dflts
+        y={}
+        for elem,item in dflts:
+            if item in y:
+                y[item].append(elem)
+            else:
+                y[item] = [elem]
+        print y
         if hcntr:
-            text_content = "== NThC report for %s ==\nPatients expected to visit today:\n%s" % (hcntr, ', '.join([elem for (elem,item) in dflts]))
+            text_content = "== NThC report for %s ==\nPatients expected to visit today (%s):\n%s" % (hcntr, len(y[hcntr]), ', '.join(y[hcntr]))
         else:
-            y={}
-            for elem,item in dflts:
-                if item in y:
-                    y[item].append(elem)
-                else:
-                    y[item] = [elem]
             dflts = ["> %s (%s): %s" % (elem, len(item), ', '.join(item)) for (elem,item) in y.items()]
-            text_content = "== NThC report for ALL health centers ==\nPatients expected to visit today:\n%s" % (hcntr, ', '.join(dflts))
+            text_content = "== NThC report for ALL health centers ==\nPatients expected to visit today:\n%s" % (', '.join(dflts), )
         
         db.close()
         # remember to close connection!
