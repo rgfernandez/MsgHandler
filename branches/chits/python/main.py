@@ -38,6 +38,8 @@ class Main:
         #hcntr = self.db_get_health_center(db, contact)
         hcntr = 'admin'
         if hcntr == '':
+            db.close()
+            # close db connection first!
             raise Exception('no health center specified')
         elif hcntr == 'admin':
             hcntr = ''
@@ -66,6 +68,8 @@ class Main:
         if x:
             return x[0][0]
         else:
+            db.close()
+            # close db connection first!
             raise Exception('%s not in health worker list' % contact)
     
     def db_get_defaults(self, db, health_center=''):
