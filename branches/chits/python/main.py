@@ -43,11 +43,13 @@ class Main:
             hcntr = ''
         dflts = self.db_get_defaults(db, hcntr)
         if hcntr:
-            text_content = "== NThC report for %s ==\nPatients expected to visit the health center:\n%s" % (hcntr, ', '.join([elem for (elem,item) in dflts]))
+            text_content = "== NThC report for %s ==\nPatients expected to visit today:\n%s" % (hcntr, ', '.join([elem for (elem,item) in dflts]))
         else:
             dflts = ["> %s (%s): %s" % (elem, len(item), ', '.join(item)) for (elem,item) in dflts.items()]
-            text_content = "== NThC report for ALL health centers ==\nPatients expected to visit:\n%s" % (hcntr, ', '.join(dflts))
+            text_content = "== NThC report for ALL health centers ==\nPatients expected to visit today:\n%s" % (hcntr, ', '.join(dflts))
         
+        db.close()
+        # remember to close connection!
         return text_content
     
     def db_get_health_center(self, db, contact):
@@ -60,13 +62,13 @@ class Main:
         else:
             raise Exception('%s not in health worker list' % contact)
     
-    def db_get_defaults(self, health_center=''):
-        cur = self.conn.cursor()
+    def db_get_defaults(self, db, health_center=''):
+        cur = db.conn.cursor()
         conds = {'timestampdiff(hour, appointment_time, now()) BETWEEN 0 AND 24': '',
                  '(patient_reg_id NOT IN (SELECT patient_reg_id FROM patient_apts WHERE timestampdiff(hour, appointment_time, now()) < 0))': ''}
         if health_center:
             conds['health_center'] = health_center
-        qry = self.get('patient_apts JOIN patient_regs ON patient_regs.id=patient_reg_id', ['patient_reg_id', 'health_center'], conds)
+        qry = db.get('patient_apts JOIN patient_regs ON patient_regs.id=patient_reg_id', ['patient_reg_id', 'health_center'], conds)
         print qry
         cur.execute(*qry)
         x = cur.fetchall()
