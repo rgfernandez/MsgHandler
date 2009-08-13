@@ -35,9 +35,18 @@ class Main:
                      'db': cfg.get('database', 'db')
                      }
         db = dbutil.DbWrapper(**db_params)
-        hcntr = self.db_get_health_center(db, contact)
+        #hcntr = self.db_get_health_center(db, contact)
+        hcntr = 'admin'
+        if hcntr == '':
+            raise Exception('no health center specified')
+        elif hcntr == 'admin':
+            hcntr = ''
         dflts = self.db_get_defaults(db, hcntr)
-        text_content = "== NThC report for %s ==\nPatients expected to visit the health center:\n%s" % (hcntr, ', '.join(dflts))
+        if hcntr:
+            text_content = "== NThC report for %s ==\nPatients expected to visit the health center:\n%s" % (hcntr, ', '.join([elem for (elem,item) in dflts]))
+        else:
+            dflts = ["> %s (%s): %s" % (elem, len(item), ', '.join(item)) for (elem,item) in dflts.items()]
+            text_content = "== NThC report for ALL health centers ==\nPatients expected to visit:\n%s" % (hcntr, ', '.join(dflts))
         
         return text_content
     
@@ -51,15 +60,17 @@ class Main:
         else:
             raise Exception('%s not in health worker list' % contact)
     
-    def db_get_defaults(self, db, health_center):
-        cur = db.conn.cursor()
-        conds = {'timestampdiff(day, appointment_time, now())': '0'}
-        if health_center != 'admin':
+    def db_get_defaults(self, health_center=''):
+        cur = self.conn.cursor()
+        conds = {'timestampdiff(hour, appointment_time, now()) BETWEEN 0 AND 24': '',
+                 '(patient_reg_id NOT IN (SELECT patient_reg_id FROM patient_apts WHERE timestampdiff(hour, appointment_time, now()) < 0))': ''}
+        if health_center:
             conds['health_center'] = health_center
-        qry = db.get('patient_apts JOIN patient_regs ON patient_regs.id=patient_reg_id', ['patient_reg_id', ], conds)
+        qry = self.get('patient_apts JOIN patient_regs ON patient_regs.id=patient_reg_id', ['patient_reg_id', 'health_center'], conds)
+        print qry
         cur.execute(*qry)
         x = cur.fetchall()
-        return tuple(['T%04d' % elem[0] for elem in x])
+        return tuple([('T%04d' % elem,item) for (elem,item) in x])
     
         #SELECT patient_reg_id FROM patient_apts JOIN patient_regs ON patient_regs.id=patient_reg_id WHERE (patient_reg_id NOT IN (SELECT patient_reg_id FROM patient_apts WHERE timestampdiff(day, appointment_time, now()) < 0)) AND timestampdiff(day, appointment_time, now())=0 AND health_center='SAN PABLO'
     
