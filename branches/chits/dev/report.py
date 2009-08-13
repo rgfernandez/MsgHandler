@@ -72,29 +72,17 @@ class report:
         x = cur.fetchall()
         return tuple([elem for elem in filter(None, map((lambda x: x if x[0] else ''), x))])
     
-    def get_post_apt(self, health_center=''):
-        """Return contact and body of message from uuid."""
-        cur = self.conn.cursor()
-        conds = {'timestampdiff(hour, appointment_time, now()) BETWEEN 0 AND 24': '',
-                 '(patient_reg_id NOT IN (SELECT patient_reg_id FROM patient_apts WHERE timestampdiff(hour, appointment_time, now()) < 0))': ''}
-        if health_center:
-            conds['health_center'] = health_center
-        qry = self.get('patient_apts JOIN patient_regs ON patient_regs.id=patient_reg_id', ['health_center', 'count(health_center)'], conds, 'GROUP BY health_center')
-        print qry
-        cur.execute(*qry)
-        x = cur.fetchall()
-        return tuple([elem for elem in filter(None, map((lambda x: x if x[0] else ''), x))])
-    
     def db_get_defaults(self, health_center=''):
         cur = self.conn.cursor()
         conds = {'timestampdiff(hour, appointment_time, now()) BETWEEN 0 AND 24': '',
                  '(patient_reg_id NOT IN (SELECT patient_reg_id FROM patient_apts WHERE timestampdiff(hour, appointment_time, now()) < 0))': ''}
         if health_center:
             conds['health_center'] = health_center
-        qry = self.get('patient_apts JOIN patient_regs ON patient_regs.id=patient_reg_id', ['patient_reg_id', ], conds)
+        qry = self.get('patient_apts JOIN patient_regs ON patient_regs.id=patient_reg_id', ['patient_reg_id', 'health_center'], conds)
+        print qry
         cur.execute(*qry)
         x = cur.fetchall()
-        return tuple(['T%04d' % elem[0] for elem in x])
+        return tuple([('T%04d' % elem,item) for (elem,item) in x])
     
     def get_post_reg(self, health_center=''):
         """Return contact and body of message from uuid."""
@@ -111,23 +99,25 @@ class report:
     def report(self, mode='post', health_center=''):
         if mode == 'post':
             x = self.get_post_reg(health_center)
-            x = ["> %s = %s" % (a,b) for (a,b) in x] if x else ['> None']
-            
-            y = self.get_post_apt(health_center)
-            y = ["> %s = %s" % (a,b) for (a,b) in y] if y else ['> None']
+            x = ["> %s = %s" % (a,b) for (a,b) in x]
             
             z = self.db_get_defaults(health_center)
-            if z:
-                z = "\nDefaulting patients(ids):\n> %s" % ', '.join(z)
-            else:
-                z = ''
+            print z
+            y={}
+            for elem,item in z:
+                if item in y:
+                    y[item].append(elem)
+                else:
+                    y[item] = [elem]
+            print y
+            z=["> %s (%s): %s" % (elem, len(item), ', '.join(item)) for (elem,item) in y.items()]
             
-            return "== NThC report for %s ==\nRegistered patients today:\n%s\nDefaulting patients:\n%s%s" % (health_center if health_center else 'ALL health centers', '\n'.join(x), '\n'.join(y), z)
+            return "== NThC daily afternoon report ==\nRegistered patients today:\n%s\nDefaulting patients:\n%s" % ('\n'.join(x), '\n'.join(z))
         elif mode == 'pre':
             x = self.get_pre_apt(health_center)
             x = ["> %s = %s" % (a,b) for (a,b) in x] if x else ['> None']
             
-            return "== NThC report for %s ==\nPatients scheduled for today:\n%s" % (health_center if health_center else 'ALL health centers', '\n'.join(x), )
+            return "== NThC daily morning report ==\nPatients scheduled for today:\n%s" % ('\n'.join(x), )
         else:
             return ''
     
