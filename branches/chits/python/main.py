@@ -35,8 +35,7 @@ class Main:
                      'db': cfg.get('database', 'db')
                      }
         db = dbutil.DbWrapper(**db_params)
-        #hcntr = self.db_get_health_center(db, contact)
-        hcntr = 'SAN PABLO'
+        hcntr = self.db_get_health_center(db, contact)
         if hcntr == '':
             db.close()
             # close db connection first!
