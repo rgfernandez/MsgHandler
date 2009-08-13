@@ -26,6 +26,10 @@ class DbWrapper:
         """Connect to database."""
         self.conn = MySQLdb.connect(**self.dbparams)
     
+    def close(self):
+        """Close the database connection."""
+        self.conn.close()
+    
     def get(self, table, cols, conds, misc=''):
         """Helper for query."""
         # misc is for LIMIT, GROUP BY, ORDER BY etc
