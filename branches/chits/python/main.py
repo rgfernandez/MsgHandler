@@ -45,7 +45,13 @@ class Main:
         if hcntr:
             text_content = "== NThC report for %s ==\nPatients expected to visit today:\n%s" % (hcntr, ', '.join([elem for (elem,item) in dflts]))
         else:
-            dflts = ["> %s (%s): %s" % (elem, len(item), ', '.join(item)) for (elem,item) in dflts.items()]
+            y={}
+            for elem,item in dflts:
+                if item in y:
+                    y[item].append(elem)
+                else:
+                    y[item] = [elem]
+            dflts = ["> %s (%s): %s" % (elem, len(item), ', '.join(item)) for (elem,item) in y.items()]
             text_content = "== NThC report for ALL health centers ==\nPatients expected to visit today:\n%s" % (hcntr, ', '.join(dflts))
         
         db.close()
