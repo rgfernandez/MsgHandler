@@ -23,11 +23,11 @@ def main():
         elif o in ('-t', '--test'):
             test_mode = True
     
-    if not os.path.exists(config_file) or not os.path.exists(ecg_file):
-        raise
-    
     cfg = ConfigParser.ConfigParser()
     cfg.read(config_file)
+    
+    if not os.path.exists(config_file) or not os.path.exists(ecg_file):
+        raise
     
     try:
         db_params = {'host': cfg.get('database', 'host'),
