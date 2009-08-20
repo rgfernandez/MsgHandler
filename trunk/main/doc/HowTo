@@ -1,0 +1,34 @@
+Configurations for MsgHandler:
+1) smstools
+   (recommended smsevent file contents):
+	...
+	if [ "$1" = "RECEIVED" ]; then
+		...
+		<MHPATH>/bin/smsevent $2
+	fi
+	...
+
+2) procmail
+   (recommended rc file contents):
+    :0 f
+    *
+    {
+    	:0c
+    	<folder to place email messages -- for easier retrieval>
+		
+    	:0
+    	| <MHPATH>/bin/emailevent $MAILDIR/$LASTFOLDER
+	}
+
+###
+Known Issues:
+1) MsgHandler [shell] scripts are tested only on Unix environments
+
+2) To update WSDL (web service connection error)
+    cd <path to>/MsgHandler/trunk/python
+    wsdl2py --complexType <url_address or file_path>
+
+3) Solution to the "/usr/bin/python^M: bad interpreter: No such file or directory" problem...
+    vim -b <filename>
+    :1,$s/^M//g
+    :wq
