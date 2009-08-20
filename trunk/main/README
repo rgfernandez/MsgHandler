@@ -1,0 +1,34 @@
+Requirements:
+1) SMS: smstools (http://smstools.meinemullemaus.de/)
+2) Email: procmail (http://www.procmail.org/)
+3) Database: MySQL and python MySQLdb
+4) Web Services: python ZSI v2.0 (http://pywebsvcs.sourceforge.net/)
+	requires PyXML v0.8.4 (http://pyxml.sourceforge.net/)
+
+###
+Using the program*:
+1) initialization
+    cd MHPATH/bin (where init_sc is located)
+    chmod 755 init_sc
+    ./init_sc
+
+2) add configuration
+    vim MHPATH/main/config/main.conf (then modify values)
+
+* note - MHPATH is the path to the root directory where the application is located (higher level than bin, doc, main, modules, etc)
+
+###
+Known Issues:
+1) MsgHandler [shell] scripts are tested only on Unix environments
+
+2) To update WSDL (web service connection error)
+    cd <path to>/MsgHandler/trunk/python
+    wsdl2py --complexType <url_address or file_path>
+
+3) Solution to the "/usr/bin/python^M: bad interpreter: No such file or directory" problem...
+    vim -b <filename>
+    :1,$s/^M//g
+    :wq
+
+###
+NOTE: Other details are at the doc folder
